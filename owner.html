@@ -243,6 +243,10 @@ $('saveMenu').addEventListener('click', async () => {
   flash('menuMsg', '메뉴 ' + r.count + '개가 저장됐어요');
 });
 $('exit').addEventListener('click', () => location.reload());
+
+// 마이페이지에서 인증한 토큰으로 자동 입장 (?code=토큰) — 서버가 코드·토큰을 같은 필드로 받는다
+const qcode = new URLSearchParams(location.search).get('code');
+if (qcode) { $('code').maxLength = 16; $('code').value = qcode; $('enter').click(); }
 </script>
 </body>
 </html>

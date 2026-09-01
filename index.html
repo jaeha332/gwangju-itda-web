@@ -107,13 +107,23 @@ a{color:var(--acc-text)}
 .sheet-body{flex:1;overflow-y:auto;overscroll-behavior:contain;
   padding:4px 12px calc(env(safe-area-inset-bottom) + 24px)}
 
-.st,.pane{display:none}
+.st{display:none}
 .state-start .st-start{display:block}
 .state-compute .st-compute{display:block}
 .state-result .st-result{display:block}
-.stage[data-tab="plan"] .pane-plan{display:block}
-.stage[data-tab="maybe"] .pane-maybe{display:block}
-.stage[data-tab="setting"] .pane-setting{display:block}
+
+/* ═══ 탭 게이트 — 일정(지도+칩바+시트)은 plan 탭에서만, 나머지 탭은 풀페이지 ═══ */
+.chipbar,.sheet{display:none}
+.stage[data-tab="plan"] .chipbar{display:flex}
+.stage[data-tab="plan"] .sheet{display:flex}
+.stage:not([data-tab="plan"]) .event{display:none}
+.page{position:absolute;inset:0 0 var(--tab-h);z-index:15;display:none;
+  overflow-y:auto;overscroll-behavior:contain;background:var(--paper);
+  padding:calc(env(safe-area-inset-top) + 18px) 16px 28px}
+.stage[data-tab="home"] .page-home{display:block}
+.stage[data-tab="maybe"] .page-maybe{display:block}
+.stage[data-tab="fest"] .page-fest{display:block}
+.stage[data-tab="my"] .page-my{display:block}
 
 /* 시작 */
 .cta{display:block;width:100%;min-height:56px;border-radius:9999px;
@@ -288,17 +298,95 @@ a{color:var(--acc-text)}
 .vsheet .go2{background:var(--acc-glass);color:var(--on-acc)}
 .vsheet .re{background:var(--ctl-glass);box-shadow:var(--ctl-rim)}
 
-/* 탭바 */
+/* ═══ 홈 ═══ */
+.home-hd{margin:6px 4px 20px}
+.wordmark{font-size:var(--fs-s);font-weight:700;color:var(--acc-text);letter-spacing:.02em}
+.home-hd h2{font-size:26px;line-height:1.32;margin-top:6px;text-wrap:balance}
+.pg-t{font-size:var(--fs-l);margin:4px 4px 14px}
+.hblock{margin-bottom:24px}
+.bl-t{display:flex;align-items:center;gap:8px;font-size:var(--fs-s);font-weight:700;
+  margin:0 4px 10px}
+.bl-t .more{margin-left:auto;color:var(--acc-text);font-size:var(--fs-xs);font-weight:600;
+  min-height:32px;padding:0 6px}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:16px;box-shadow:0 4px 16px rgba(15,23,42,.06)}
+.qcard .lead{font-weight:700;font-size:var(--fs-m);margin-bottom:12px}
+.qrow{display:flex;gap:8px}
+.qrow button{flex:1;min-height:56px;border-radius:12px;font-weight:700;font-size:var(--fs-s);
+  background:color-mix(in srgb, var(--acc) 10%, transparent);color:var(--acc-text);
+  transition:transform .25s ease-out}
+.qrow button:active{transform:scale(.96)}
+.qhint{font-size:var(--fs-xs);color:var(--sub);margin-top:10px}
+.livechip{font-size:12px;font-weight:700;color:var(--ok);background:rgba(14,122,79,.12);
+  padding:2px 8px;border-radius:99px}
+.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;
+  margin:0 -16px;padding:2px 16px 6px}
+.hcard{flex:none;width:190px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;text-align:left}
+.hcard .nm{font-weight:700;font-size:var(--fs-s);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.hcard .ct{font-size:var(--fs-xs);color:var(--sub);margin-top:3px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.zrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.zcard{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:14px 12px;text-align:left;transition:transform .25s ease-out}
+.zcard:active{transform:scale(.96)}
+.zcard .zn{font-weight:700;font-size:var(--fs-s)}
+.zcard .zc{font-size:12.5px;color:var(--sub);margin-top:3px}
+.truststrip{font-size:12.5px;color:var(--sub);text-align:center;margin:0 4px}
+
+/* ═══ 마이페이지 · 사장님 온보딩 ═══ */
+.mybox{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:16px;margin:0 4px 16px}
+.mybox .ct{font-size:var(--fs-xs);color:var(--sub);line-height:1.6}
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:10px 4px;text-align:center}
+.stat b{display:block;font-size:var(--fs-l);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--sub)}
+.srow{display:flex;gap:8px;margin-top:12px}
+.srow input{flex:1;min-width:0;min-height:48px;border-radius:12px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);padding:0 12px;font:inherit}
+.srow .primary{flex:none;min-width:76px;min-height:48px;border-radius:12px;
+  background:var(--acc-glass);color:var(--on-acc);font-weight:700;font-size:var(--fs-s)}
+.srow .ghost{flex:none;min-height:48px;padding:0 14px;border-radius:12px;
+  background:var(--ctl-glass);box-shadow:var(--ctl-rim);font-weight:600;font-size:var(--fs-xs)}
+.olist{margin-top:6px}
+.olist button{display:flex;width:100%;justify-content:space-between;align-items:center;
+  gap:8px;min-height:52px;padding:8px 4px;border-bottom:1px solid var(--line);text-align:left}
+.olist .on{font-weight:700;font-size:var(--fs-s)}
+.olist .oa{font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.olist .odone{flex:none;font-size:12px;color:var(--ok);font-weight:700}
+.ownform input{width:100%;min-height:48px;border-radius:12px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);padding:0 12px;font:inherit;margin-top:8px}
+.ownmsg{font-size:var(--fs-xs);margin-top:10px;font-weight:600}
+.ownmsg.err{color:var(--warn)}
+.ownmsg.ok{color:var(--ok)}
+.badge-own{display:flex;align-items:center;gap:7px;color:var(--ok);font-weight:700;
+  font-size:var(--fs-s)}
+.badge-own svg{width:19px;height:19px}
+.mylist{margin:0 4px}
+.mylist .setrow{margin:0 0 10px}
+.disabled-card{opacity:.55}
+
+/* 탭바 — 중앙 일정 버튼 융기 */
 .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:30;height:var(--tab-h);
   display:flex;background:var(--bar-bg);
   backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
   box-shadow:inset 0 1px 0 var(--line);
   padding-bottom:env(safe-area-inset-bottom)}
 .tabbar button{flex:1;display:flex;flex-direction:column;gap:3px;
-  align-items:center;justify-content:center;font-size:12.5px;font-weight:600;
+  align-items:center;justify-content:center;font-size:12px;font-weight:600;
   color:var(--sub)}
 .tabbar button.on{color:var(--acc-text)}
 .tabbar svg{width:22px;height:22px}
+.tabbar .big .orb{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+  margin-top:-30px;background:var(--acc-glass);color:var(--on-acc);
+  backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);
+  box-shadow:0 8px 20px rgba(37,99,235,.4),inset 0 1px 0 rgba(255,255,255,.32),
+    0 0 0 4px var(--paper)}
+.tabbar .big svg{width:25px;height:25px}
 </style>
 </head>
 <body>
@@ -313,9 +401,14 @@ a{color:var(--acc-text)}
   <symbol id="i-shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2Z"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
 </defs></svg>
 
-<div class="stage state-start" id="stage" data-tab="plan">
+<div class="stage state-start" id="stage" data-tab="home">
 
   <div id="map"><div class="fallback"><span>지도 준비 중</span></div></div>
 
@@ -361,25 +454,115 @@ a{color:var(--acc-text)}
         </div>
       </div>
 
-      <div class="pane pane-maybe">
-        <h3>들러볼 곳 <small>영업시간 미확인이라 순서에 넣지 않았어요. 가기 전에 전화로 확인하세요.</small></h3>
-        <div id="maybeList"></div>
-      </div>
-
-      <div class="pane pane-setting">
-        <h3>설정</h3>
-        <div class="setrow"><span>큰 글씨</span>
-          <label class="switch"><input type="checkbox" id="optSenior"><i></i></label></div>
-        <div class="setrow"><span>사장님이신가요?</span>
-          <a class="call" href="owner.html" style="min-width:auto">가게 코드로 열기</a></div>
-        <p class="src" style="text-align:left">
-          위치정보를 수집·저장하지 않습니다(단말 내 이용).<br>
-          회원가입 없음 · 팀 Beginnova
-        </p>
-      </div>
-
     </div>
   </section>
+
+  <div class="page page-home">
+    <header class="home-hd">
+      <div class="wordmark">광주잇다</div>
+      <h2>광주에서<br>시간이 비었나요?</h2>
+    </header>
+
+    <section class="hblock">
+      <div class="qcard">
+        <p class="lead">얼마나 있다 가세요?</p>
+        <div class="qrow" id="qStart">
+          <button data-dl="2시간">2시간</button>
+          <button data-dl="3시간">3시간</button>
+          <button data-dl="6:20 기차">6:20 기차</button>
+        </div>
+        <p class="qhint">문 연 곳과 이동시간을 검증해 일정을 짜 드려요</p>
+      </div>
+    </section>
+
+    <section class="hblock" id="seatBlock" hidden>
+      <p class="bl-t">지금 자리 있어요 <span class="livechip">사장님 실시간</span></p>
+      <div class="hscroll" id="seatCards"></div>
+    </section>
+
+    <section class="hblock" id="festBlock" hidden>
+      <p class="bl-t">지금 광주 행사
+        <button class="more" id="festMore">전체 보기</button></p>
+      <div class="hscroll" id="festCards"></div>
+    </section>
+
+    <section class="hblock">
+      <p class="bl-t">권역으로 시작</p>
+      <div class="zrow" id="zoneCards"></div>
+    </section>
+
+    <p class="truststrip">확인된 곳만 · 검증 영수증 · 위치정보 무수집(단말 내 이용)</p>
+    <p class="src">출처: 한국관광공사 · 소상공인시장진흥공단 · 카카오 · KTO 무장애</p>
+  </div>
+
+  <div class="page page-maybe">
+    <h3 class="pg-t">들러볼 곳</h3>
+    <p class="ct" style="font-size:var(--fs-xs);color:var(--sub);margin:0 4px 14px">
+      영업시간 미확인이라 순서에 넣지 않았어요. 가기 전에 전화로 확인하세요.</p>
+    <div id="maybeList"></div>
+  </div>
+
+  <div class="page page-fest">
+    <h3 class="pg-t">광주 행사</h3>
+    <div id="festList"></div>
+    <p class="src" id="festSrc">출처: 한국관광공사 TourAPI</p>
+  </div>
+
+  <div class="page page-my">
+    <h3 class="pg-t">마이페이지</h3>
+
+    <div class="mybox">
+      <p class="bl-t" style="margin-bottom:4px">이 폰의 별명</p>
+      <p class="ct">이 폰에만 저장돼요 — 회원가입·서버 전송 없음</p>
+      <div class="srow">
+        <input id="nick" placeholder="예: 광주 반나절러" maxlength="12">
+        <button class="primary" id="nickSave">저장</button>
+      </div>
+      <div class="statgrid">
+        <div class="stat"><b id="stPlans">0</b><span>만든 일정</span></div>
+        <div class="stat"><b id="stMaybe">0</b><span>들러볼 곳</span></div>
+        <div class="stat"><b>0</b><span>다녀온 곳</span></div>
+        <div class="stat"><b>0</b><span>아낀 시간</span></div>
+      </div>
+    </div>
+
+    <div class="mybox">
+      <p class="bl-t"><svg style="width:18px;height:18px"><use href="#i-shop"/></svg>사장님이신가요?</p>
+      <div id="ownDone" hidden>
+        <p class="badge-own"><svg><use href="#i-badge"/></svg><span id="ownName"></span></p>
+        <div class="srow">
+          <a class="call" id="ownOpen" href="owner.html" style="flex:1;justify-content:center">가게 관리 열기</a>
+          <button class="ghost" id="ownOut">해제</button>
+        </div>
+      </div>
+      <div id="ownStart">
+        <p class="ct">가게를 등록하면 '지금 자리 있어요'와 영업시간이 방문객 일정에 실시간 반영돼요.</p>
+        <div class="srow">
+          <input id="ownQ" placeholder="가게 이름으로 검색" enterkeyhint="search">
+          <button class="primary" id="ownSearch">검색</button>
+        </div>
+        <div class="olist" id="ownResults"></div>
+        <div id="ownMethods" hidden></div>
+        <div class="ownform" id="ownForm" hidden></div>
+        <p class="ownmsg" id="ownMsg" hidden></p>
+      </div>
+    </div>
+
+    <div class="mybox disabled-card">
+      <p class="bl-t" style="margin-bottom:4px">간편 가입 (준비 중)</p>
+      <p class="ct">쿠폰·일정 동기화는 운영 단계에 열려요. 지금은 아무것도 수집하지 않습니다.</p>
+    </div>
+
+    <div class="mylist">
+      <div class="setrow"><span>큰 글씨</span>
+        <label class="switch"><input type="checkbox" id="optSenior"><i></i></label></div>
+      <div class="setrow"><span>데이터 출처</span>
+        <span class="ct" style="font-size:12.5px;color:var(--sub);text-align:right">TourAPI · 소상공인시장진흥공단<br>카카오 · KTO 무장애 · 기상청</span></div>
+    </div>
+    <p class="src" style="text-align:left;margin:16px 8px 0">
+      위치정보를 수집·저장하지 않습니다(단말 내 이용).<br>
+      회원가입 없음 · 팀 Beginnova</p>
+  </div>
 
   <aside class="event" id="event" role="status" aria-live="assertive">
     <div class="msg"><svg id="evIcon"><use href="#i-bus"/></svg><span id="evText"></span></div>
@@ -406,9 +589,12 @@ a{color:var(--acc-text)}
   </aside>
 
   <nav class="tabbar" aria-label="주요 메뉴">
-    <button class="on" data-tab="plan" aria-current="page"><svg><use href="#i-route"/></svg>일정</button>
+    <button class="on" data-tab="home" aria-current="page"><svg><use href="#i-home"/></svg>홈</button>
     <button data-tab="maybe"><svg><use href="#i-shop"/></svg>들러볼 곳</button>
-    <button data-tab="setting"><svg><use href="#i-gear"/></svg>설정</button>
+    <button class="big" data-tab="plan" aria-label="일정 만들기">
+      <span class="orb"><svg><use href="#i-route"/></svg></span>일정</button>
+    <button data-tab="fest"><svg><use href="#i-cal"/></svg>행사</button>
+    <button data-tab="my"><svg><use href="#i-user"/></svg>마이</button>
   </nav>
 </div>
 

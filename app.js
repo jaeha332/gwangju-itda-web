@@ -47,7 +47,9 @@ const CP_OPTS = [
 
 function chipText() {
   setChip('chipDl', state.dl && state.dl.label, '마감');
-  setChip('chipOg', state.og && OG_OPTS.find(o => o.key === state.og).label, '출발');
+  // 권역 카드는 픽커 목록 밖의 프리셋(동명동·양림동)도 넣는다 — PRESETS 이름으로 폴백
+  setChip('chipOg', state.og && ((OG_OPTS.find(o => o.key === state.og) || {}).label
+    || (PRESETS[state.og] && PRESETS[state.og].name)), '출발');
   setChip('chipCp', state.cp !== null && CP_OPTS.find(o => o.key === state.cp) && state.cp !== ''
     ? CP_OPTS.find(o => o.key === state.cp).label.split(' ')[0] : (state.cp === '' ? '혼자' : '동행'), '동행');
 }
@@ -128,6 +130,7 @@ $('go').addEventListener('click', () => {
 function nudge(id){ const el = $(id); el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); }
 
 function startCompute() {
+  bumpPlans();
   setState('compute'); springTo('half');
   $('log1').textContent = '영업시간 확인';
   $('log2').textContent = '이동시간 검증' + (state.dl.ret ? ' · 송정역 복귀 기준' : '');
@@ -146,6 +149,11 @@ function startCompute() {
 async function run() {
   const live = await serverGet('/live');
   let cands = CANDIDATES;
+  if (live && live.new_stores && live.new_stores.length) {
+    // 자가 온보딩으로 22곳 밖에서 등록된 가게 — 실제 후보 목록에 합류
+    const have = new Set(cands.map(c => c.id));
+    cands = cands.concat(live.new_stores.filter(s => !have.has(s.id)));
+  }
   if (live && live.updates)               // 사장님 입력: 미확인 가게가 후보로 (차별점 ①)
     cands = cands.map(c => live.updates[c.id] ? Object.assign({}, c, live.updates[c.id]) : c);
   if (live && live.open_now && live.open_now.length) {
@@ -240,6 +248,7 @@ function render(out, event) {
   drawRoute(its);
   renderEvent(event);
   pollLive();
+  renderStats();
 }
 function dateTag(iso, prefix) {
   // owner: '사장님 확인 8/31' / field: '현장 확인 8/26' — 날짜 없으면 라벨만
@@ -277,13 +286,18 @@ window.addEventListener('popstate', () => {
 });
 function setState(s){ stage.classList.remove('state-start','state-compute','state-result'); stage.classList.add('state-' + s); }
 
-/* ═══ 탭 ═══ */
-document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('.tabbar button').forEach(x => { x.classList.remove('on'); x.removeAttribute('aria-current'); });
-  b.classList.add('on'); b.setAttribute('aria-current', 'page');
-  stage.dataset.tab = b.dataset.tab;
-  if (b.dataset.tab !== 'plan') springTo('half');
-}));
+/* ═══ 탭 (홈이 시작 — 일정은 plan 탭에서만) ═══ */
+function switchTab(name) {
+  document.querySelectorAll('.tabbar button').forEach(x => {
+    const on = x.dataset.tab === name;
+    x.classList.toggle('on', on);
+    if (on) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current');
+  });
+  stage.dataset.tab = name;
+  if (name === 'home') loadHome();          // 자리 있어요 블록 최신화
+}
+document.querySelectorAll('.tabbar button').forEach(b =>
+  b.addEventListener('click', () => switchTab(b.dataset.tab)));
 $('optSenior').addEventListener('change', e => document.documentElement.classList.toggle('senior', e.target.checked));
 
 /* ═══ 이벤트 카드 (제안 → 승인 → diff → 되돌리기) ═══ */
@@ -524,5 +538,229 @@ $('grip').addEventListener('click', () => {
 })();
 function drawRoute(its){ if (window.__routeShow) window.__routeShow(true, its); }
 
+/* ═══ 공용: 이스케이프 + POST ═══ */
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+async function serverPost(path, body, ms = 9000) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    const r = await fetch(SERVER + path, { method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    clearTimeout(t);
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+
+/* ═══ 홈 — 빠른 시작 · 자리 있어요 · 권역 ═══ */
+document.querySelectorAll('#qStart button').forEach(b => b.addEventListener('click', () => {
+  const o = DL_OPTS.find(x => x.label === b.dataset.dl);
+  state.dl = { label: o.label, deadline: o.deadline || hm(nowDate(o.rel)), ret: o.ret };
+  chipText(); switchTab('plan');
+  if (state.og) startCompute();
+  else openPicker('어디서 출발?', OG_OPTS.map(x => ({ ...x })),
+    x => { state.og = x.key; chipText(); startCompute(); });
+}));
+
+function liveStores(live) {
+  const m = Object.fromEntries(CANDIDATES.map(c => [c.id, c]));
+  if (live && live.new_stores) live.new_stores.forEach(s => { if (!m[s.id]) m[s.id] = s; });
+  return m;
+}
+async function loadHome() {
+  const live = await serverGet('/live');
+  const all = liveStores(live);
+  const open = ((live && live.open_now) || []).map(id => all[id]).filter(Boolean);
+  const box = $('seatCards'); box.innerHTML = '';
+  open.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'hcard';
+    b.innerHTML = '<div class="nm">' + esc(c.name) + '</div><div class="ct">'
+      + esc(c.category || '') + ' · 지금 자리 있어요</div>';
+    b.addEventListener('click', () => switchTab('plan'));
+    box.appendChild(b);
+  });
+  $('seatBlock').hidden = !open.length;
+}
+
+const ZONES = [
+  { name: '충장로', og: 'chungjang' },
+  { name: '동명동', og: 'dongmyeong' },
+  { name: '양림동', og: 'yangnim' },
+];
+ZONES.forEach(z => {
+  const n = CANDIDATES.filter(c => c.zone === z.name).length;
+  const b = document.createElement('button');
+  b.className = 'zcard';
+  b.innerHTML = '<div class="zn">' + z.name + '</div><div class="zc">확인된 곳 ' + n + '</div>';
+  b.addEventListener('click', () => {
+    state.og = z.og; chipText(); switchTab('plan');
+    if (state.dl) startCompute();
+    else $('chipDl').click();               // 마감부터 — 빈 칩이 스스로 안내
+  });
+  $('zoneCards').appendChild(b);
+});
+
+/* ═══ 행사 — 서버 프록시, 죽으면 사전 캐시 폴백 ═══ */
+function fmtFest(f) {
+  const d = s => Number(s.slice(4, 6)) + '.' + Number(s.slice(6, 8));
+  return d(f.start) + '~' + d(f.end);
+}
+async function loadFestivals() {
+  let d = await serverGet('/festivals', 2500);
+  if (!d || !d.ok || !d.items || !d.items.length) {
+    try { d = await (await fetch('festivals.json')).json(); } catch { d = null; }
+  }
+  const items = (d && d.items) || [];
+  const hb = $('festCards'); hb.innerHTML = '';
+  items.slice(0, 6).forEach(f => {
+    const c = document.createElement('button');
+    c.className = 'hcard';
+    c.innerHTML = '<div class="nm">' + esc(f.title) + '</div><div class="ct">'
+      + fmtFest(f) + ' · ' + esc(f.place) + '</div>';
+    c.addEventListener('click', () => switchTab('fest'));
+    hb.appendChild(c);
+  });
+  $('festBlock').hidden = !items.length;
+  const fl = $('festList'); fl.innerHTML = '';
+  items.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'mcard'; div.style.borderStyle = 'solid';
+    div.innerHTML = '<div><div class="nm">' + esc(f.title) + '</div><div class="ct">'
+      + fmtFest(f) + ' · ' + esc(f.place) + '</div></div>';
+    fl.appendChild(div);
+  });
+  if (!items.length)
+    fl.innerHTML = '<div class="empty">행사 정보를 불러오지 못했어요.</div>';
+}
+$('festMore').addEventListener('click', () => switchTab('fest'));
+
+/* ═══ 마이 — 별명(이 폰에만) + 기록 ═══ */
+const stats = JSON.parse(localStorage.getItem('itda_stats') || '{"plans":0}');
+function bumpPlans() {
+  stats.plans++;
+  localStorage.setItem('itda_stats', JSON.stringify(stats));
+  renderStats();
+}
+function renderStats() {
+  $('stPlans').textContent = stats.plans;
+  $('stMaybe').textContent = state.last ? state.last.maybe.length : 0;
+}
+$('nick').value = localStorage.getItem('itda_nick') || '';
+$('nickSave').addEventListener('click', () => {
+  localStorage.setItem('itda_nick', $('nick').value.trim());
+  $('nickSave').textContent = '저장됨';
+  setTimeout(() => { $('nickSave').textContent = '저장'; }, 1200);
+});
+
+/* ═══ 사장님 자가 온보딩 — 전부 실동작. 미구성 수단은 서버가 목록에서 뺀다 ═══ */
+let ownSel = null;
+function ownNote(text, cls) {
+  const el = $('ownMsg');
+  el.hidden = !text; el.textContent = text || '';
+  el.className = 'ownmsg' + (cls ? ' ' + cls : '');
+}
+async function doOwnSearch() {
+  ownNote(''); $('ownMethods').hidden = true; $('ownForm').hidden = true;
+  const q = $('ownQ').value.trim();
+  if (q.length < 2) { ownNote('두 글자 이상 입력해 주세요', 'err'); return; }
+  const d = await serverGet('/stores/search?q=' + encodeURIComponent(q), 4000);
+  if (!d) { ownNote('서버에 연결할 수 없어요 — 가게 인증은 서버가 켜져 있을 때 가능해요', 'err'); return; }
+  if (!d.ok) { ownNote(d.reason, 'err'); return; }
+  const box = $('ownResults'); box.innerHTML = '';
+  if (!d.stores.length) { ownNote('광주 동구·남구 ' + d.total + '곳에서 찾지 못했어요', 'err'); return; }
+  d.stores.forEach(s => {
+    const b = document.createElement('button');
+    b.innerHTML = '<span><span class="on">' + esc(s.name) + '</span><br><span class="oa">'
+      + esc(s.addr) + '</span></span>' + (s.claimed ? '<span class="odone">등록됨</span>' : '');
+    b.addEventListener('click', () => pickStore(s));
+    box.appendChild(b);
+  });
+}
+$('ownSearch').addEventListener('click', doOwnSearch);
+$('ownQ').addEventListener('keydown', e => { if (e.key === 'Enter') doOwnSearch(); });
+
+async function pickStore(s) {
+  ownSel = s; ownNote(''); $('ownForm').hidden = true;
+  $('ownResults').innerHTML = ''; $('ownQ').value = s.name;
+  const d = await serverGet('/owner/methods', 4000);
+  if (!d || !d.ok) { ownNote('서버에 연결할 수 없어요', 'err'); return; }
+  const box = $('ownMethods');
+  box.hidden = false; box.className = 'olist'; box.innerHTML = '';
+  d.methods.forEach(m => {
+    const b = document.createElement('button');
+    b.innerHTML = '<span><span class="on">' + esc(m.label) + '</span><br><span class="oa">'
+      + esc(m.desc) + '</span></span><span class="oa">›</span>';
+    b.addEventListener('click', () => showMethodForm(m.id));
+    box.appendChild(b);
+  });
+}
+
+function showMethodForm(mid) {
+  const f = $('ownForm'); f.hidden = false; f.innerHTML = ''; ownNote('');
+  const mk = (ph, extra) => {
+    const i = document.createElement('input');
+    i.placeholder = ph; Object.assign(i, extra || {});
+    f.appendChild(i); return i;
+  };
+  const mkBtn = label => {
+    const b = document.createElement('button');
+    b.className = 'primary';
+    b.style.cssText = 'display:block;width:100%;min-height:48px;border-radius:12px;margin-top:10px;'
+      + 'background:var(--acc-glass);color:var(--on-acc);font-weight:700;font-size:var(--fs-s)';
+    b.textContent = label; f.appendChild(b); return b;
+  };
+  if (mid === 'sms') {
+    ownNote('공개된 가게 전화번호로 인증번호를 보내요');
+    const send = mkBtn('인증번호 보내기');
+    send.addEventListener('click', async () => {
+      send.disabled = true;
+      const d = await serverPost('/owner/claim/sms/request', { store_key: ownSel.key });
+      send.disabled = false;
+      if (!d) { ownNote('서버에 연결할 수 없어요', 'err'); return; }
+      if (!d.ok) { ownNote(d.reason, 'err'); return; }
+      f.innerHTML = '';
+      ownNote(d.sent_to + '로 보냈어요 — 5분 안에 입력해 주세요', 'ok');
+      const code = mk('인증번호 6자리', { inputMode: 'numeric', maxLength: 6 });
+      mkBtn('확인').addEventListener('click', async () =>
+        handleClaim(await serverPost('/owner/claim/sms/verify', { store_key: ownSel.key, code: code.value })));
+    });
+  } else if (mid === 'biz') {
+    const bno = mk('사업자등록번호 10자리', { inputMode: 'numeric' });
+    const nm = mk('대표자명');
+    const dt = mk('개업일 8자리 (예: 20190301)', { inputMode: 'numeric', maxLength: 8 });
+    mkBtn('국세청에서 확인').addEventListener('click', async () =>
+      handleClaim(await serverPost('/owner/claim/biz',
+        { store_key: ownSel.key, b_no: bno.value, p_nm: nm.value, start_dt: dt.value })));
+  } else {
+    const code = mk('파일럿 코드 4자리', { inputMode: 'numeric', maxLength: 4 });
+    mkBtn('확인').addEventListener('click', async () => {
+      const v = await serverPost('/owner/session', { code: code.value });
+      if (v && v.ok) handleClaim({ ok: true, token: code.value, store: v.store });
+      else ownNote((v && v.reason) || '없는 코드예요', 'err');
+    });
+  }
+}
+function handleClaim(v) {
+  if (!v) { ownNote('서버에 연결할 수 없어요', 'err'); return; }
+  if (!v.ok) { ownNote(v.reason || '인증에 실패했어요', 'err'); return; }
+  localStorage.setItem('itda_owner', JSON.stringify({ token: v.token, name: v.store.name }));
+  renderOwner();
+}
+function renderOwner() {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem('itda_owner')); } catch {}
+  $('ownDone').hidden = !o;
+  $('ownStart').hidden = !!o;
+  if (o) {
+    $('ownName').textContent = o.name + ' — 인증됨';
+    $('ownOpen').href = 'owner.html?code=' + encodeURIComponent(o.token);
+  }
+}
+$('ownOut').addEventListener('click', () => { localStorage.removeItem('itda_owner'); renderOwner(); });
+
 /* ═══ 초기화 ═══ */
 chipText();
+renderOwner();
+renderStats();
+loadFestivals();
+loadHome();
