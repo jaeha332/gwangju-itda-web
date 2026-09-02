@@ -165,6 +165,10 @@ a{color:var(--acc-text)}
   background:var(--bar-bg);border-radius:10px;padding:7px 12px;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .nowline b{color:var(--ink)}
+.aiwhy{font-size:var(--fs-xs);color:var(--sub);margin:-6px 4px 14px;padding:7px 12px;
+  border-left:3px solid var(--acc);background:var(--bar-bg);border-radius:0 10px 10px 0;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.aiwhy b{color:var(--acc-text)}
 
 .thread{list-style:none;position:relative;padding-left:30px;margin:0 4px}
 .thread::before{content:"";position:absolute;left:10px;top:14px;bottom:14px;
@@ -317,6 +321,14 @@ a{color:var(--acc-text)}
   transition:transform .25s ease-out}
 .qrow button:active{transform:scale(.96)}
 .qhint{font-size:var(--fs-xs);color:var(--sub);margin-top:10px}
+.nearby{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  min-height:50px;margin-top:8px;border-radius:12px;font-weight:700;font-size:var(--fs-s);
+  background:var(--acc-glass);color:var(--on-acc);
+  backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:transform .25s ease-out}
+.nearby:active{transform:scale(.97)}
+.nearby .nb-note{font-size:11.5px;font-weight:500;opacity:.85}
+.nearby.busy{opacity:.6;pointer-events:none}
 .livechip{font-size:12px;font-weight:700;color:var(--ok);background:rgba(14,122,79,.12);
   padding:2px 8px;border-radius:99px}
 .hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;
@@ -406,6 +418,7 @@ a{color:var(--acc-text)}
   <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
   <symbol id="i-badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
 </defs></svg>
 
 <div class="stage state-start" id="stage" data-tab="home">
@@ -443,6 +456,7 @@ a{color:var(--acc-text)}
             <small id="deadNote"></small>
           </div>
           <p class="nowline" id="nowline"></p>
+          <p class="aiwhy" id="aiWhy" hidden></p>
           <ul class="thread" id="thread"></ul>
           <div class="empty" id="emptyMsg" hidden></div>
           <details class="receipt" id="receipt">
@@ -471,6 +485,9 @@ a{color:var(--acc-text)}
           <button data-dl="3시간">3시간</button>
           <button data-dl="6:20 기차">6:20 기차</button>
         </div>
+        <button class="nearby" id="btnNearby">
+          <svg style="width:16px;height:16px"><use href="#i-pin"/></svg>내 주변에서 시작
+          <span class="nb-note">위치는 이 폰 안에서만 써요</span></button>
         <p class="qhint">문 연 곳과 이동시간을 검증해 일정을 짜 드려요</p>
       </div>
     </section>
@@ -556,6 +573,11 @@ a{color:var(--acc-text)}
     <div class="mylist">
       <div class="setrow"><span>큰 글씨</span>
         <label class="switch"><input type="checkbox" id="optSenior"><i></i></label></div>
+      <!-- 임시 개발용 진입점 — liquid-glass 검증 후 제거 -->
+      <div class="setrow"><span>글래스 목업 (개발)</span>
+        <a href="glass_mock.html" style="color:var(--deep);font-size:13px;font-weight:600">열기</a></div>
+      <div class="setrow"><span>굴절 검증 (개발)</span>
+        <a href="glass_test.html" style="color:var(--deep);font-size:13px;font-weight:600">열기</a></div>
       <div class="setrow"><span>데이터 출처</span>
         <span class="ct" style="font-size:12.5px;color:var(--sub);text-align:right">TourAPI · 소상공인시장진흥공단<br>카카오 · KTO 무장애 · 기상청</span></div>
     </div>

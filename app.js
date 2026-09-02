@@ -249,6 +249,25 @@ function render(out, event) {
   renderEvent(event);
   pollLive();
   renderStats();
+  loadWhy(out);
+}
+
+/* LLM 출구 — 계산 '결과'를 근거로 이유 한 줄. 서버가 사실 검사 통과시킨 문장만 표시 */
+async function loadWhy(out) {
+  const el = $('aiWhy');
+  el.hidden = true;
+  if (!out.itinerary.length) return;
+  const snapshot = state.last;
+  const d = await serverPost('/explain', {
+    stops: out.itinerary.map(c => ({ name: c.name, arrive: c.arrive, depart: c.depart,
+      travel_min: c.travel_min, travel_mode: c.travel_mode })),
+    deadline: state.dl.deadline, companion: state.cp || null, ret: !!state.dl.ret,
+  }, 9000);
+  // 응답이 늦게 와도 그 사이 재계산됐으면 버린다(스테일 문장 금지)
+  if (d && d.ok && state.last === snapshot && stage.classList.contains('state-result')) {
+    el.innerHTML = '<b>AI</b> ' + esc(d.reason);
+    el.hidden = false;
+  }
 }
 function dateTag(iso, prefix) {
   // owner: '사장님 확인 8/31' / field: '현장 확인 8/26' — 날짜 없으면 라벨만
@@ -378,19 +397,47 @@ function parseSpeech(text) {
   if (/실내|비\s?오/.test(text)) { got.indoor = true; got.cond.push('실내 위주'); }
   return got;
 }
+/* LLM 입구 — 서버 /nlu(Claude, 키는 서버에만)가 우선, 실패·미구성이면 기존 정규식 폴백 */
+async function parseWithAI(text) {
+  const d = await serverPost('/nlu', { text }, 8000);
+  if (!d || !d.ok) return null;
+  const got = { cond: [], ai: true };
+  if (d.train) {
+    got.dl = { label: '6:20 기차', deadline: '18:20', ret: 'songjeong' };
+    got.cond.push('6:20 기차');
+  } else if (d.rel_minutes) {
+    const lbl = d.rel_minutes % 60 === 0 ? (d.rel_minutes / 60) + '시간' : d.rel_minutes + '분';
+    got.dl = { label: lbl, deadline: hm(nowDate(d.rel_minutes)) };
+    got.cond.push(lbl);
+  } else if (d.deadline) {
+    got.dl = { label: '오후 ' + fmt12(d.deadline), deadline: d.deadline };
+    got.cond.push(got.dl.label + '까지');
+  }
+  if (d.origin && PRESETS[d.origin]) {
+    got.og = d.origin;
+    got.cond.push(PRESETS[d.origin].name + ' 출발');
+  }
+  if (d.companion === 'senior') { got.cp = 'senior'; got.cond.push('천천히'); }
+  else if (d.companion === 'child') { got.cp = 'child'; got.cond.push('아이와'); }
+  if (d.indoor) { got.indoor = true; got.cond.push('실내 위주'); }
+  return got.cond.length ? got : null;    // AI가 아무것도 못 뽑으면 정규식에게 기회
+}
+
 let vParsedResult = null;
-function showEcho(text) {
-  const got = parseSpeech(text);
-  vParsedResult = got;
+async function showEcho(text) {
   $('vHeard').textContent = '“' + text + '”';
+  $('vParsed').textContent = '알아듣는 중…';
+  $('vInput').hidden = true;
+  vs.classList.add('show');
+  const got = (await parseWithAI(text)) || parseSpeech(text);
+  vParsedResult = got;
   const missing = [];
   if (!got.dl && !state.dl) missing.push('마감');
   if (!got.og && !state.og) missing.push('출발지');
   $('vParsed').innerHTML = got.cond.length
-    ? '반영: <b>' + got.cond.join(' · ') + '</b>' + (missing.length ? '<br>' + missing.join('·') + '은 못 들었어요 — 칩으로 골라 주세요' : '')
+    ? (got.ai ? 'AI 반영: ' : '반영: ') + '<b>' + got.cond.join(' · ') + '</b>'
+      + (missing.length ? '<br>' + missing.join('·') + '은 못 들었어요 — 칩으로 골라 주세요' : '')
     : '조건을 못 알아들었어요. 칩으로 골라 주세요.';
-  $('vInput').hidden = true;
-  vs.classList.add('show');
 }
 $('voice').addEventListener('click', async () => {
   try {
@@ -408,8 +455,11 @@ $('voice').addEventListener('click', async () => {
     setTimeout(() => $('vInput').focus(), 350);
   }
 });
-$('vApply').addEventListener('click', () => {
-  if (!vParsedResult && !$('vInput').hidden) vParsedResult = parseSpeech($('vInput').value || '');
+$('vApply').addEventListener('click', async () => {
+  if (!vParsedResult && !$('vInput').hidden) {
+    const t = $('vInput').value || '';
+    vParsedResult = (await parseWithAI(t)) || parseSpeech(t);
+  }
   const g = vParsedResult || {};
   if (g.dl) state.dl = g.dl;
   if (g.og) state.og = g.og;
@@ -582,6 +632,59 @@ async function loadHome() {
   $('seatBlock').hidden = !open.length;
 }
 
+/* ═══ 내 주변에서 시작 — 좌표는 이 폰 안에서만(서버 미전송, KISA 면제 유지) ═══ */
+function distM(a, b) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const x = Math.sin(dLat / 2) ** 2
+    + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+async function readPosition() {
+  const G = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Geolocation;
+  if (G) {                                  // 앱: Capacitor 플러그인(런타임 권한 포함)
+    const p = await G.getCurrentPosition({ enableHighAccuracy: false, timeout: 9000 });
+    return { lat: p.coords.latitude, lon: p.coords.longitude };
+  }
+  return new Promise((res, rej) =>          // 웹 폴백
+    navigator.geolocation.getCurrentPosition(
+      p => res({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      rej, { timeout: 9000 }));
+}
+$('btnNearby').addEventListener('click', async () => {
+  const btn = $('btnNearby');
+  btn.classList.add('busy');
+  try {
+    const pos = await readPosition();
+    // 권역 중심과의 거리 — 1.2km 안이면 그 권역 소속으로 정확 계산, 밖이면 추측하지 않는다
+    let best = null, bestD = Infinity;
+    for (const z of ZONES) {
+      const d = distM(pos, PRESETS[z.og]);
+      if (d < bestD) { bestD = d; best = z; }
+    }
+    if (bestD > 1200) {
+      alertNearby('지금 위치가 서비스 권역(충장로·동명동·양림동) 밖이에요 — 출발지를 골라 주세요');
+      switchTab('plan');
+      $('chipOg').click();
+      return;
+    }
+    PRESETS.gps = { name: '내 주변 (' + best.name + ')', lat: pos.lat, lon: pos.lon,
+                    zone: PRESETS[best.og].zone || best.name };
+    state.og = 'gps'; chipText(); switchTab('plan');
+    if (state.dl) startCompute();
+    else $('chipDl').click();
+  } catch {
+    alertNearby('위치를 읽지 못했어요(권한 거부 또는 시간 초과) — 출발지를 직접 골라 주세요');
+  } finally {
+    btn.classList.remove('busy');
+  }
+});
+function alertNearby(msg) {                  // alert 금지 — 카드 밑 한 줄로
+  const el = $('qStart').parentElement.querySelector('.qhint');
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = '문 연 곳과 이동시간을 검증해 일정을 짜 드려요'; }, 6000);
+}
+
 const ZONES = [
   { name: '충장로', og: 'chungjang' },
   { name: '동명동', og: 'dongmyeong' },
@@ -743,6 +846,11 @@ function showMethodForm(mid) {
 function handleClaim(v) {
   if (!v) { ownNote('서버에 연결할 수 없어요', 'err'); return; }
   if (!v.ok) { ownNote(v.reason || '인증에 실패했어요', 'err'); return; }
+  if (v.pending) {                       // 사업자 확인만으로는 관리권 미발급 — 정직하게 접수 안내
+    $('ownForm').hidden = true;
+    ownNote(v.message || '접수됐어요 — 가게 소유 확인 후 관리가 열려요', 'ok');
+    return;
+  }
   localStorage.setItem('itda_owner', JSON.stringify({ token: v.token, name: v.store.name }));
   renderOwner();
 }
