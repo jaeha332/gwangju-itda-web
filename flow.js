@@ -132,7 +132,17 @@
   }
 
   // 서버 회랑 번들(/corridors)로 인라인 사본을 덮어쓴다. 서버가 없으면 인라인 그대로(무통신 폴백).
-  const SERVER = param('server') || devServer() || 'http://localhost:8000';   // ?server= > 개발자 모드 > 노트북
+  /* 공개 배포(Render 등)에서는 앱과 API를 같은 서버가 서빙한다 — 주소를 손으로 붙이지 않아도 되게 자기 출처를 쓴다.
+     Capacitor(https://localhost)·노트북 개발(localhost:8787 + API 8000)·API 없는 Pages 데모는 지금 규칙 그대로. */
+  const PUBLIC_API = 'https://gwangju-itda-api.onrender.com';   // 공개 배포 API. GitHub Pages(정적)는 API가 없어 이 주소를 본다.
+  function pageServer() {
+    if (!/^https?:$/.test(location.protocol)) return null;
+    const h = location.hostname;
+    if (!h || h === 'localhost' || h === '127.0.0.1') return null;
+    if (/\.github\.io$/.test(h)) return PUBLIC_API;   // Pages는 파일만 준다 — 서버 일(장소·날씨·말 이해·사장님)은 저쪽
+    return location.origin;                           // API가 앱을 직접 서빙(Render 등) — 자기 출처가 곧 API
+  }
+  const SERVER = param('server') || devServer() || pageServer() || 'http://localhost:8000';   // ?server= > 개발자 모드 > 앱을 내려준 서버 > 노트북
   // 서버 호출 공통: 정해진 시간이 지나면 스스로 끊는다. 응답이 200이 아니면 null, 통신 자체가 끊기면 예외 — 호출부가 폴백을 고른다.
   async function getJson(url, ms) {
     const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), ms);
@@ -1206,7 +1216,15 @@
   /* 지역 사장 → 사장님 화면(/store). 같은 서버(server/owner.py)가 서빙한다.
      방문객 성격(itda.who)은 건드리지 않는다 — 사장님은 이 앱의 페르소나가 아니라 다른 화면의 사용자다.
      앱에서는 기본 브라우저로 나간다(Capacitor App.openUrl) — 인앱 브라우저 플러그인은 아직 없다. */
-  function openOwner() { toast('사장님 화면을 엽니다', 2000, 'store'); openUrl(SERVER + '/store'); }
+  /* 앱 안에서 연다. 밖으로 내보내면(App.openUrl·window.open) Capacitor WebView가 주소를 못 넘겨
+     'null 사이트에 접근할 수 없습니다'로 떨어진다[실측 2026-09-04 실기기]. store.html은 APK에 함께 들어 있고,
+     ?server= 로 API 주소를 넘기면(store.js resolveServer) 서버가 어디에 있든 같은 화면이 뜬다.
+     돌아오기는 안드로이드 뒤로가기 또는 사장님 화면 좌상단 '앱으로'. */
+  function openOwner() {
+    toast('사장님 화면을 엽니다', 1600, 'store');
+    const u = 'store.html?from=app&server=' + encodeURIComponent(SERVER);
+    setTimeout(() => { location.href = u; }, 260);
+  }
   const NM_APP = 'kr.beginnova.itda';                                                    // nmap:// 은 appname 이 필수다
   const nWeb = (name) => `https://map.naver.com/p/search/${encodeURIComponent(name)}`;    // 앱이 없을 때 갈 곳
   function openNm(scheme, name) { if (CapApp && CapApp.openUrl) CapApp.openUrl({ url: scheme }).catch(() => window.open(nWeb(name), '_blank')); else window.open(nWeb(name), '_blank'); }

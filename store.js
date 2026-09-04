@@ -17,7 +17,13 @@ function resolveServer() {
   if (p) { lsSet('itda_server', p); return p.replace(/\/+$/, ''); }
   const ls = lsGet('itda_server');
   if (ls) return ls.replace(/\/+$/, '');
-  if (/^https?:$/.test(location.protocol) && /\/store\/?$/.test(location.pathname)) return location.origin;
+  // API가 직접 서빙(/store)하거나, 공개 배포에서 같은 서버가 /app/store.html 을 내려준 경우 → 그 출처가 곧 API
+  if (/^https?:$/.test(location.protocol)) {
+    const h = location.hostname;
+    if (/\/store\/?$/.test(location.pathname)) return location.origin;
+    if (/\.github\.io$/.test(h)) return 'https://gwangju-itda-api.onrender.com';   // Pages는 정적 — API는 공개 배포 서버
+    if (h && h !== 'localhost' && h !== '127.0.0.1') return location.origin;
+  }
   return 'http://localhost:8000';
 }
 function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
@@ -25,6 +31,8 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
 function lsDel(k) { try { localStorage.removeItem(k); } catch {} }
 function lsJSON(k) { try { return JSON.parse(lsGet(k)); } catch { return null; } }
 const SERVER = resolveServer();
+// 앱(index.html)에서 들어왔으면 돌아갈 길을 남긴다 — 폰에는 주소창이 없다
+if (qs.get('from') === 'app') { try { const b = document.getElementById('backApp'); if (b) { b.hidden = false; b.style.display = 'block'; } } catch (e) {} }
 const SERVER_ORIGIN = (() => { try { return new URL(SERVER).origin; } catch { return ''; } })();
 
 /* ─── 공용 fetch: JSON, 8초 타임아웃, 실패는 {ok:false, reason} ─── */
