@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#D6E9F7">
+<title>결제 확인</title>
+<!-- 토스 결제창이 돌아오는 자리(docs/예약결제_구현설계_2026-09-04 §2).
+     여기서 서버 POST /payments/confirm까지 끝내고 index.html?paid= 또는 ?payfail=로 돌려보낸다.
+     60대 기준: 큰 글씨 한 줄만. 앱을 어떻게 열었는지(?server=·?debug=)는 그대로 물려준다. -->
+<style>
+  :root { color-scheme: light; }
+  html, body { margin: 0; height: 100%; background: #D6E9F7; }
+  body { display: flex; align-items: center; justify-content: center; padding: 24px;
+         font-family: "IBM Plex Sans KR", -apple-system, system-ui, sans-serif; color: #0F1B26; }
+  p { margin: 0; font-size: 34px; font-weight: 700; line-height: 1.35; text-align: center; }
+</style>
+</head>
+<body>
+<p id="msg" role="status" aria-live="polite">결제 확인 중…</p>
+<script>
+(function () {
+  'use strict';
+  var P = new URLSearchParams(location.search);
+  var SERVER = P.get('server') || 'http://localhost:8000';
+  var TOSS = ['paymentKey', 'orderId', 'amount', 'code', 'message', 'paid', 'payfail', 'pk'];   // 결제창이 붙여 준 값은 앱으로 넘기지 않는다
+  var CONFIRM_MS = 15000;                                       // 승인 확인은 이만큼 기다리고 정직하게 실패
+
+  function homeUrl(extra) {                                     // index.html + (원래 열 때 쓰던 파라미터) + 결과
+    var q = new URLSearchParams();
+    P.forEach(function (v, k) { if (TOSS.indexOf(k) < 0 && v) q.set(k, v); });
+    Object.keys(extra).forEach(function (k) { if (extra[k]) q.set(k, extra[k]); });
+    var s = q.toString();
+    return 'index.html' + (s ? '?' + s : '');
+  }
+  function done(extra) { location.replace(homeUrl(extra)); }
+  function fail(code) { document.getElementById('msg').textContent = '결제가 안 됐어요'; done({ payfail: code || 'unknown' }); }
+
+  var code = P.get('code');
+  if (code) { fail(code); return; }                             // 실패·취소로 돌아온 경우(failUrl)
+  var paymentKey = P.get('paymentKey'), orderId = P.get('orderId'), amount = P.get('amount');
+  if (!paymentKey || !orderId) { fail('no_params'); return; }
+
+  var ctrl = new AbortController();
+  var t = setTimeout(function () { ctrl.abort(); }, CONFIRM_MS);
+  fetch(SERVER + '/payments/confirm', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
+    body: JSON.stringify({ paymentKey: paymentKey, orderId: orderId, amount: Number(amount) })
+  })
+    .then(function (r) { return r.ok ? r.json() : { ok: false, reason: 'http_' + r.status }; })
+    .then(function (d) {
+      if (d && d.ok) done({ paid: orderId, pk: paymentKey });
+      else fail((d && d.reason) || 'pg_error');
+    })
+    .catch(function () { fail('network'); })
+    .then(function () { clearTimeout(t); });
+})();
+</script>
+</body>
+</html>

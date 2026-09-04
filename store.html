@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>광주잇다 사장님</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 트랜짓 토큰(docs/화면스펙.md) — 사장님 화면은 58~65세 기준으로 글자·대비·터치를 키움.
+   본문 20px+ / 핵심 24~30px / 터치 56px+ / 글자 대비 7:1+ / 카드 불투명(블러 없음) */
+:root{
+  --paper:#F5F7FA; --ink:#0F172A; --sub:#3F4B5F; --line:rgba(15,23,42,.16);
+  --acc:#1E40AF; --acc-text:#1E3A8A; --on-acc:#fff; --acc-soft:rgba(30,64,175,.10);
+  --ok:#085A39; --ok-soft:rgba(8,90,57,.10); --warn:#7C3A0B; --warn-soft:rgba(124,58,11,.12);
+  --card:#FFFFFF; --field:#FFFFFF;
+  --fs-xs:18px; --fs-s:19px; --fs-m:20px; --fs-l:24px; --fs-xl:30px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0E1013; --ink:#F1F3F6; --sub:#B8C0CC; --line:rgba(232,234,238,.18);
+    --acc:#A5C0FF; --acc-text:#BFD3FF; --on-acc:#0B1A3A; --acc-soft:rgba(165,192,255,.14);
+    --ok:#7EE8B8; --ok-soft:rgba(126,232,184,.14); --warn:#F7BE7A; --warn-soft:rgba(247,190,122,.16);
+    --card:#181B20; --field:#1F2329;
+  }
+}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html{font-size:var(--fs-m)}
+body{background:var(--paper);color:var(--ink);min-height:100dvh;
+  font-family:"IBM Plex Sans KR",system-ui,sans-serif;font-size:var(--fs-m);line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+a{color:var(--acc-text)}
+header{position:sticky;top:0;z-index:10;background:var(--card);
+  box-shadow:inset 0 -1px 0 var(--line);
+  padding:calc(env(safe-area-inset-top) + 14px) 18px 12px;font-weight:700;font-size:var(--fs-l)}
+header small{display:block;font-size:var(--fs-xs);font-weight:500;color:var(--sub);margin-top:2px}
+.wrap{max-width:520px;margin:0 auto;padding:18px 16px calc(env(safe-area-inset-bottom) + 48px)}
+.hide{display:none !important}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:18px 16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.card h2{font-size:var(--fs-l);font-weight:700;margin-bottom:6px}
+.card h3{font-size:var(--fs-xs);font-weight:700;color:var(--sub);margin-bottom:8px;letter-spacing:.02em}
+.big{font-size:var(--fs-xl);font-weight:700;line-height:1.25;word-break:keep-all}
+.meta{color:var(--sub);font-size:var(--fs-s);line-height:1.5}
+.meta+.meta{margin-top:4px}
+label.lbl{display:block;font-weight:600;font-size:var(--fs-s);margin:14px 0 6px}
+input[type=text],input[type=tel],input[type=time],input[type=search],select{width:100%;min-height:58px;
+  border:1.5px solid var(--line);border-radius:14px;background:var(--field);
+  padding:0 14px;font-size:var(--fs-l)}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+input.code{letter-spacing:.35em;text-align:center;font-weight:700;font-size:36px;min-height:72px;
+  font-variant-numeric:tabular-nums}
+input:disabled{opacity:.5}
+.btn{display:block;width:100%;min-height:60px;margin-top:14px;border-radius:16px;padding:0 16px;
+  font-weight:700;font-size:var(--fs-l);background:var(--acc);color:var(--on-acc);
+  transition:transform .15s ease-out}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.line{background:var(--card);color:var(--ink);border:2px solid var(--line)}
+.btn.small{min-height:56px;font-size:var(--fs-m)}
+.btn.seat{min-height:72px;font-size:var(--fs-l)}
+.btn.seat.on{background:var(--ok);color:#fff}
+@media (prefers-color-scheme: dark){ .btn.seat.on{color:#062A1B} }
+.two{display:flex;gap:10px}
+.two .btn{flex:1}
+.flash{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:var(--fs-m);
+  font-weight:600;display:none;line-height:1.45;word-break:keep-all}
+.flash.ok{background:var(--ok-soft);color:var(--ok)}
+.flash.err{background:var(--warn-soft);color:var(--warn)}
+.flash.info{background:var(--acc-soft);color:var(--acc-text)}
+.row{display:flex;gap:10px;align-items:center;margin-top:10px}
+.row label{flex:none;width:96px;font-weight:600;font-size:var(--fs-s)}
+.row input{flex:1;min-width:0}
+.check{display:flex;align-items:center;gap:12px;min-height:56px;font-weight:600;font-size:var(--fs-m);
+  margin-top:8px;cursor:pointer}
+.check input{width:28px;height:28px;flex:none;accent-color:var(--acc)}
+.foot{font-size:var(--fs-xs);color:var(--sub);text-align:center;line-height:1.7;margin-top:20px;word-break:keep-all}
+.linkbtn{display:block;width:100%;min-height:56px;margin-top:12px;text-align:center;
+  font-weight:700;font-size:var(--fs-m);color:var(--acc-text);text-decoration:underline;
+  text-underline-offset:4px}
+.timer{font-size:var(--fs-xs);color:var(--sub);margin-top:6px}
+.note{font-size:var(--fs-s);color:var(--sub);margin-top:8px;line-height:1.5;word-break:keep-all}
+
+/* 검색 결과 */
+.hit{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);
+  border-radius:16px;padding:16px;margin-top:10px;min-height:88px}
+.hit:active{transform:scale(.99)}
+.hit .nm{font-size:var(--fs-l);font-weight:700;line-height:1.3}
+.hit .ct{font-size:var(--fs-s);color:var(--sub);margin-top:4px}
+.hit .ad{font-size:var(--fs-s);color:var(--sub);margin-top:2px}
+.badge{display:inline-block;font-size:var(--fs-xs);font-weight:700;padding:4px 12px;border-radius:99px;
+  background:var(--ok);color:#fff;margin-right:6px;line-height:1.4;vertical-align:middle}
+@media (prefers-color-scheme: dark){ .badge{color:#062A1B} }
+.badge.gray{background:var(--acc-soft);color:var(--acc-text)}
+.badge.seat{background:var(--acc-soft);color:var(--acc-text)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* 인증 수단 버튼 */
+.method{display:block;width:100%;text-align:left;background:var(--card);border:2px solid var(--line);
+  border-radius:16px;padding:16px;margin-top:12px;min-height:88px}
+.method .nm{font-size:var(--fs-l);font-weight:700}
+.method .ds{font-size:var(--fs-s);color:var(--sub);margin-top:4px;line-height:1.45}
+
+/* 결과 화면 */
+.checkmark{width:88px;height:88px;border-radius:50%;background:var(--ok);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:700;margin:6px auto 14px}
+@media (prefers-color-scheme: dark){ .checkmark{color:#062A1B} }
+.clock{background:var(--warn-soft);color:var(--warn)}
+.center{text-align:center}
+
+/* 메뉴 줄 */
+.mrow{display:grid;grid-template-columns:1fr 112px;gap:8px;margin-top:10px;align-items:center}
+.mrow.with-photo{grid-template-columns:1fr 100px 1fr}
+.mrow input,.mrow select{min-height:56px;font-size:var(--fs-m);padding:0 12px}
+.mrow .del{grid-column:1 / -1;justify-self:end;min-height:44px;padding:0 14px;color:var(--warn);
+  font-weight:700;font-size:var(--fs-s);border-radius:10px;border:1.5px solid var(--warn-soft);background:var(--warn-soft)}
+.mrow .conf{font-size:var(--fs-s);font-weight:700;color:var(--sub);text-align:center}
+.mrow .conf.hi{color:var(--ok)} .mrow .conf.lo{color:var(--warn)}
+
+/* 사진 */
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.thumb{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.thumb img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.thumb .k{font-size:var(--fs-xs);font-weight:600;color:var(--sub);padding:4px 8px;text-align:center}
+.thumb .del{display:block;width:100%;min-height:44px;font-weight:700;color:var(--warn);background:var(--warn-soft);font-size:var(--fs-s)}
+.pvimg{width:100%;max-height:240px;object-fit:contain;border-radius:12px;margin-top:10px;background:var(--paper)}
+.kind{display:flex;gap:8px;margin-top:10px}
+.kind button{flex:1;min-height:56px;border-radius:14px;border:2px solid var(--line);font-weight:700;font-size:var(--fs-m);background:var(--card)}
+.kind button[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text)}
+
+/* AI 초안 */
+.banner{padding:12px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-weight:600;
+  font-size:var(--fs-m);line-height:1.45;margin-top:10px;word-break:keep-all}
+.banner.info{background:var(--acc-soft);color:var(--acc-text)}
+.banner .two{margin-top:6px}
+.banner .btn{margin-top:8px;min-height:56px;font-size:var(--fs-m)}
+
+/* 방문객 미리보기 — 방문객 앱 카드와 같은 문법(불투명 카드) */
+.preview{border-style:dashed}
+.preview .pv-label{font-size:var(--fs-xs);color:var(--sub);margin-bottom:10px}
+.pvcard{display:flex;gap:12px;align-items:flex-start}
+.pvcard img{width:88px;height:88px;object-fit:cover;border-radius:12px;flex:none;background:var(--paper)}
+.pvcard .nm{font-weight:700;font-size:var(--fs-l);line-height:1.3}
+.pvcard .tags{margin:6px 0}
+.pvcard .ln{font-size:var(--fs-s);color:var(--sub);line-height:1.5}
+
+/* 지원사업 */
+.prog{display:block;padding:12px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit;min-height:56px}
+.prog:first-of-type{border-top:none}
+.prog .t{font-weight:700;font-size:var(--fs-m);line-height:1.35}
+.prog .o{font-size:var(--fs-s);color:var(--sub);margin-top:2px}
+
+/* S6 만료 게이트 — 불투명 고정 오버레이, DOM은 그대로 */
+#gate6{position:fixed;inset:0;z-index:100;background:var(--paper);display:flex;align-items:center;
+  justify-content:center;padding:24px}
+#gate6 .card{max-width:440px;width:100%}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+.days{display:flex;gap:6px;margin-top:8px}
+.days label{flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;gap:4px;border:2px solid var(--line);border-radius:12px;font-weight:700;background:var(--card);cursor:pointer}
+.days label:has(input:checked){border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text)}
+.days input{width:18px;height:18px;margin:0}
+.resv{padding:10px 0;border-top:1px solid var(--line)}
+.resv .t{font-weight:700}
+.resv .o{font-size:var(--fs-s);opacity:.8}
+</style>
+</head>
+<body>
+<header>광주잇다 사장님<small id="hdSub">회원가입 없음 · 우리 가게만 찾으면 됩니다</small></header>
+
+<!-- S0 부팅 -->
+<section class="wrap screen" id="s0">
+  <div class="card center">
+    <p class="big">가게 정보를 여는 중…</p>
+    <p class="meta" style="margin-top:8px">이 폰에 저장된 관리 번호로 열고 있어요.</p>
+  </div>
+</section>
+
+<!-- S1 가게 찾기 -->
+<section class="wrap screen hide" id="s1">
+  <div class="flash" id="s1Msg" role="alert"></div>
+  <div class="card">
+    <h2>우리 가게 찾기</h2>
+    <p class="meta">가게 이름이나 주소를 두 글자 이상 넣고 찾기를 눌러 주세요.</p>
+    <label class="lbl" for="q">가게 이름 또는 주소</label>
+    <input type="search" id="q" placeholder="가게 이름 또는 주소 두 글자 이상" enterkeyhint="search" autocomplete="off">
+    <button class="btn" id="searchBtn">찾기</button>
+    <div class="flash" id="qMsg" role="status"></div>
+    <div id="hits" aria-live="polite"></div>
+  </div>
+  <button class="linkbtn" id="toCode">종이로 받은 4자리 코드가 있으신가요? → 코드로 열기</button>
+  <p class="foot">이름·전화번호 등 개인정보는 저장하지 않습니다.<br>
+  사업자번호는 국세청 확인에만 쓰고 끝 4자리만 남깁니다.</p>
+</section>
+
+<!-- S2 인증 수단 -->
+<section class="wrap screen hide" id="s2">
+  <div class="card">
+    <h3>선택한 가게</h3>
+    <p class="big" id="s2Name"></p>
+    <p class="meta" id="s2Addr"></p>
+    <div class="flash info" id="s2Note" role="status"></div>
+  </div>
+  <div class="card">
+    <h2>내 가게라는 것을 어떻게 확인할까요?</h2>
+    <p class="meta">하나만 고르시면 됩니다.</p>
+    <div id="methods"></div>
+    <div class="flash" id="s2Msg" role="alert"></div>
+  </div>
+  <button class="linkbtn" id="s2Back">← 다른 가게 찾기</button>
+</section>
+
+<!-- S3a 사업자등록 인증 -->
+<section class="wrap screen hide" id="s3a">
+  <div class="card">
+    <h3>사업자등록으로 확인</h3>
+    <p class="big" id="s3aName"></p>
+    <p class="meta">국세청에 등록된 내용과 맞는지만 확인합니다. 사업자번호는 저장하지 않아요.</p>
+    <label class="lbl" for="bno">사업자등록번호 (10자리)</label>
+    <input type="tel" id="bno" inputmode="numeric" placeholder="000-00-00000" autocomplete="off" maxlength="12">
+    <label class="lbl" for="pnm">대표자 성함</label>
+    <input type="text" id="pnm" placeholder="사업자등록증에 적힌 성함" autocomplete="off">
+    <label class="lbl" for="sdt">개업일 (8자리)</label>
+    <input type="tel" id="sdt" inputmode="numeric" placeholder="예: 20150301" maxlength="8" autocomplete="off">
+    <div id="phoneRow">
+      <label class="lbl" for="phone">가게 전화번호</label>
+      <input type="tel" id="phone" inputmode="tel" placeholder="예: 062-234-7731" autocomplete="off">
+      <p class="note">공개된 가게 전화번호와 같으면 바로 관리가 열려요.</p>
+    </div>
+    <button class="btn" id="bizSubmit">확인 받기</button>
+    <div class="flash" id="bizMsg" role="alert"></div>
+  </div>
+  <button class="linkbtn" id="s3aBack">← 다른 방법으로 확인</button>
+</section>
+
+<!-- S3b 파일럿 코드 -->
+<section class="wrap screen hide" id="s3b">
+  <div class="card">
+    <h2>가게 코드로 열기</h2>
+    <p class="meta">저희가 종이로 전해 드린 4자리 숫자를 눌러 주세요.</p>
+    <input class="code" id="pcode" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="가게 코드 4자리" autocomplete="one-time-code">
+    <label class="check"><input type="checkbox" id="remember" checked> 이 폰 기억하기 (다음부터 바로 열려요)</label>
+    <button class="btn" id="codeEnter">우리 가게 열기</button>
+    <div class="flash" id="codeMsg" role="alert"></div>
+  </div>
+  <button class="linkbtn" id="toSearch">코드를 잃어버리셨나요? 사업자등록 인증으로 새 관리 번호를 받을 수 있어요 → 가게 찾기</button>
+  <p class="foot">이름·전화번호 등 개인정보는 아무것도 입력하지 않습니다.</p>
+</section>
+
+<!-- S3c 문자 인증 -->
+<section class="wrap screen hide" id="s3c">
+  <div class="card">
+    <h3>문자로 확인</h3>
+    <p class="big" id="s3cName"></p>
+    <p class="meta" id="s3cDesc">가게의 공개된 전화번호로 인증번호 6자리를 보내 드려요.</p>
+    <button class="btn" id="smsSend">인증번호 보내기</button>
+    <div id="smsStep2" class="hide">
+      <label class="lbl" for="smsCode">인증번호 6자리</label>
+      <input class="code" id="smsCode" type="tel" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">
+      <button class="btn" id="smsVerify">확인</button>
+      <button class="btn line small" id="smsResend" disabled>다시 보내기 (60초)</button>
+    </div>
+    <div class="flash" id="smsMsg" role="alert"></div>
+  </div>
+  <button class="linkbtn" id="s3cBack">← 다른 방법으로 확인</button>
+</section>
+
+<!-- S4 결과 -->
+<section class="wrap screen hide" id="s4">
+  <div class="card center" id="s4ok">
+    <div class="checkmark" aria-hidden="true">✓</div>
+    <p class="big" id="s4Title"></p>
+    <p class="meta" style="margin-top:8px">이 폰에 저장했어요. 다음부터는 바로 열립니다.</p>
+    <button class="btn" id="startManage">가게 관리 시작</button>
+    <div class="flash" id="s4Msg" role="alert"></div>
+  </div>
+  <div class="card center hide" id="s4pending">
+    <div class="checkmark clock" aria-hidden="true">…</div>
+    <p class="big">접수됐어요</p>
+    <p class="meta" style="margin-top:8px" id="s4pMain">국세청 확인은 됐어요. 가게 전화가 공개 번호와 달라 사람이 확인 중입니다.</p>
+    <div class="flash info" id="s4pServer" role="status"></div>
+    <p class="note" id="s4pHint"></p>
+    <div class="two">
+      <button class="btn line" id="s4pCode">코드로 열기</button>
+      <button class="btn line" id="s4pHome">처음으로</button>
+    </div>
+  </div>
+</section>
+
+<!-- S5 관리 -->
+<section class="wrap screen hide" id="s5">
+  <!-- 저장 안 한 입력(초안) 배너 -->
+  <div class="banner hide" id="draftBanner">
+    <div>저장 안 한 입력이 있어요 — 지난번에 적던 내용을 다시 불러올까요?</div>
+    <div class="two">
+      <button class="btn" id="draftLoad">불러오기</button>
+      <button class="btn line" id="draftDrop">버리기</button>
+    </div>
+  </div>
+
+  <!-- (1) 헤더 -->
+  <div class="card">
+    <div class="big" id="storeName"></div>
+    <div class="meta" id="storeMeta" style="margin-top:4px"></div>
+    <div style="margin-top:8px"><span class="badge" id="methodBadge"></span></div>
+    <div class="meta hide" id="viewsLine" style="margin-top:8px;font-weight:600;color:var(--ink)"></div>
+    <div class="timer" id="timer"></div>
+  </div>
+
+  <!-- (2) 자리 있어요 -->
+  <div class="card">
+    <h3>지금 자리 있어요</h3>
+    <p class="meta">누르면 30분 동안, 방문객 일정 카드에 '지금 자리 있어요'가 붙어요.</p>
+    <button class="btn seat" id="seatBtn">지금 자리 있어요</button>
+    <div class="flash" id="seatMsg" role="status"></div>
+  </div>
+
+  <!-- (2b) 예약 — 방문객 일정에서 들어온 예약(테스트 결제). 서버가 목록을 줄 때만 -->
+  <div class="card hide" id="resvCard">
+    <h3>들어온 예약</h3>
+    <p class="meta">방문객이 일정에서 넣은 예약이에요. 결제는 테스트 모드라 실제 돈은 움직이지 않아요.</p>
+    <div id="resvList"></div>
+    <div class="flash" id="resvMsg" role="status"></div>
+  </div>
+
+  <!-- (3) 영업시간 -->
+  <div class="card">
+    <h3>영업시간</h3>
+    <p class="meta">저장한 영업시간·휴무는 방문객이 일정을 짤 때 조건으로 쓰여요. 휴무인 날은 후보에서 빠지고, 저장한 날짜가 '사장님 확인' 배지로 붙어요.</p>
+    <div class="row"><label for="open">여는 시간</label><input type="time" id="open"></div>
+    <div class="row"><label for="close">닫는 시간</label><input type="time" id="close"></div>
+    <label class="check"><input type="checkbox" id="brkOn"> 중간에 쉬는 시간이 있어요</label>
+    <div id="brkRows" class="hide">
+      <div class="row"><label for="brkStart">쉬기 시작</label><input type="time" id="brkStart"></div>
+      <div class="row"><label for="brkEnd">다시 열기</label><input type="time" id="brkEnd"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="closedToday"> 오늘은 쉬어요 (휴무)</label>
+    <div class="banner hide" id="closedWarn">저장하면 오늘 하루 방문객 일정에서 빠져요.</div>
+    <div class="lbl" style="margin-top:12px">매주 쉬는 요일 <span class="note">(없으면 비워 두세요)</span></div>
+    <div class="days" id="closedDays" role="group" aria-label="매주 쉬는 요일">
+      <label><input type="checkbox" value="mon">월</label><label><input type="checkbox" value="tue">화</label><label><input type="checkbox" value="wed">수</label><label><input type="checkbox" value="thu">목</label><label><input type="checkbox" value="fri">금</label><label><input type="checkbox" value="sat">토</label><label><input type="checkbox" value="sun">일</label>
+    </div>
+    <p class="note">쉬는 요일에는 방문객 일정 후보에서 자동으로 빠져요.</p>
+    <div id="nluBox" class="hide">
+      <label class="lbl" for="nluText">말로 적어도 돼요</label>
+      <input type="text" id="nluText" placeholder="예) 11시부터 9시, 3~5시 쉬어요">
+      <button class="btn line small" id="nluBtn">시간 칸에 채우기</button>
+      <p class="note">채워진 뒤에도 아래 저장을 눌러야 반영돼요.</p>
+    </div>
+    <div class="flash" id="hoursNote" role="status"></div>
+    <button class="btn" id="saveHours">영업시간 저장</button>
+    <div class="flash" id="hoursMsg" role="status"></div>
+  </div>
+
+  <!-- (4) 대표 메뉴 -->
+  <div class="card">
+    <h3>대표 메뉴</h3>
+    <p class="meta">방문객 카드에 가장 크게 보이는 메뉴 하나입니다.</p>
+    <label class="lbl" for="repName">메뉴 이름</label>
+    <input type="text" id="repName" placeholder="예: 김치찌개">
+    <div class="row"><label for="repP1">1인 가격</label><input type="tel" id="repP1" inputmode="numeric" placeholder="9000"></div>
+    <div class="row"><label for="repP2">2인 가격</label><input type="tel" id="repP2" inputmode="numeric" placeholder="17000"></div>
+    <p class="note">대표 메뉴는 아래 '메뉴 저장'을 누를 때 함께 저장돼요.</p>
+  </div>
+
+  <!-- (5) 메뉴 목록 -->
+  <div class="card">
+    <h3>메뉴 목록</h3>
+    <p class="meta">이름과 가격만 넣으면 돼요. 가격은 숫자만.</p>
+    <div id="menuRows"></div>
+    <button class="btn line small" id="addRow">메뉴 한 줄 추가</button>
+    <button class="btn" id="saveMenu">메뉴 저장</button>
+    <div class="flash" id="menuMsg" role="status"></div>
+  </div>
+
+  <!-- (6) 사진 — 서버가 사진 기능을 켰을 때만 -->
+  <div class="card hide" id="photoCard">
+    <h3>사진</h3>
+    <p class="meta">메뉴판이나 가게 사진을 올려 두면 방문객 카드에 보여요.</p>
+    <div class="kind" role="group" aria-label="사진 종류">
+      <button type="button" data-kind="menu" aria-pressed="true">메뉴판</button>
+      <button type="button" data-kind="store" aria-pressed="false">가게 사진</button>
+    </div>
+    <input type="file" id="photoFile" accept="image/*" capture="environment" class="hide">
+    <button class="btn" id="photoBtn">사진 찍기 / 올리기</button>
+    <img id="photoPreview" class="pvimg hide" alt="올릴 사진 미리보기">
+    <div class="flash" id="photoMsg" role="status"></div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <!-- (7) AI 초안 — OCR 가능 + 메뉴판 사진 1장 이상일 때만 -->
+  <div class="card hide" id="ocrCard">
+    <h3>메뉴판 사진에서 읽기</h3>
+    <p class="meta">올린 메뉴판 사진을 AI가 읽어 메뉴 이름과 가격 초안을 만들어요.</p>
+    <div id="ocrPick" class="hide">
+      <label class="lbl" for="ocrPhoto">읽을 사진</label>
+      <select id="ocrPhoto"></select>
+    </div>
+    <button class="btn" id="ocrBtn">사진에서 메뉴 읽기 (AI)</button>
+    <div class="flash" id="ocrMsg" role="status"></div>
+    <div id="ocrDraft" class="hide">
+      <div class="banner">AI가 읽은 초안이에요. 확인 후 저장을 눌러야 반영됩니다.</div>
+      <div id="ocrRows"></div>
+      <div class="two">
+        <button class="btn" id="ocrApply">이대로 메뉴 목록에 넣기</button>
+        <button class="btn line" id="ocrDrop">버리기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- (8) 방문객 미리보기 -->
+  <div class="card preview">
+    <div class="pv-label">방문객에게는 이렇게 보여요</div>
+    <div class="pvcard">
+      <img id="pvImg" class="hide" alt="">
+      <div style="min-width:0">
+        <div class="nm" id="pvName"></div>
+        <div class="tags" id="pvTags"></div>
+        <div class="ln" id="pvHours"></div>
+        <div class="ln" id="pvMenu"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (9) 지원사업 — 서버가 항목을 줄 때만 -->
+  <div class="card hide" id="progCard">
+    <h3>우리 가게 지원사업</h3>
+    <p class="meta" style="margin-bottom:6px">광주 소상공인 대상 공공 지원사업 공고예요(기업마당 원문 링크). 누르면 안내 페이지가 열립니다.</p>
+    <div id="progList"></div>
+  </div>
+
+  <!-- (10) 로그아웃 -->
+  <button class="btn line" id="logout">이 폰에서 로그아웃</button>
+  <div class="banner info hide" id="logoutConfirm">
+    <div>이 폰에서 로그아웃하면 다음에 다시 인증해야 해요. 로그아웃할까요?</div>
+    <div class="two">
+      <button class="btn" id="logoutYes">예, 로그아웃</button>
+      <button class="btn line" id="logoutNo">아니요</button>
+    </div>
+  </div>
+  <p class="foot">이 화면은 우리 가게 정보만 고칠 수 있어요.<br>
+  방문객이 어디 있는지는 사장님도, 저희도 알 수 없습니다.</p>
+</section>
+
+<!-- S6 만료 게이트 -->
+<div id="gate6" class="hide" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="card center">
+    <p class="big" id="gateTitle">잠시 잠갔어요.</p>
+    <p class="meta" style="margin-top:8px">입력하신 내용은 그대로 있어요.</p>
+    <button class="btn" id="reopen">다시 열기</button>
+    <button class="btn line hide" id="reauth">다시 인증하기</button>
+    <div class="flash" id="gateMsg" role="alert"></div>
+  </div>
+</div>
+
+<noscript><p class="wrap">이 화면은 자바스크립트가 켜져 있어야 해요.</p></noscript>
+<script src="store.js"></script>
+</body>
+</html>

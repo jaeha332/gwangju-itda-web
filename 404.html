@@ -187,8 +187,6 @@ a{color:var(--acc-text)}
 .tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .tag{font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:99px;
   background:rgba(14,122,79,.1);color:var(--ok)}
-.tag.owner{background:var(--ok);color:#fff}
-.tag.seat{background:rgba(37,99,235,.12);color:var(--acc-text)}
 .move{margin:2px 0 12px;font-size:var(--fs-xs);color:var(--sub);
   display:inline-flex;align-items:center;gap:6px;
   background:var(--bar-bg);padding:5px 11px;border-radius:8px;
@@ -347,7 +345,7 @@ a{color:var(--acc-text)}
 .zcard .zc{font-size:12.5px;color:var(--sub);margin-top:3px}
 .truststrip{font-size:12.5px;color:var(--sub);text-align:center;margin:0 4px}
 
-/* ═══ 마이페이지 · 사장님 온보딩 ═══ */
+/* ═══ 마이페이지 ═══ */
 .mybox{background:var(--card);border:1px solid var(--line);border-radius:16px;
   padding:16px;margin:0 4px 16px}
 .mybox .ct{font-size:var(--fs-xs);color:var(--sub);line-height:1.6}
@@ -492,11 +490,6 @@ a{color:var(--acc-text)}
       </div>
     </section>
 
-    <section class="hblock" id="seatBlock" hidden>
-      <p class="bl-t">지금 자리 있어요 <span class="livechip">사장님 실시간</span></p>
-      <div class="hscroll" id="seatCards"></div>
-    </section>
-
     <section class="hblock" id="festBlock" hidden>
       <p class="bl-t">지금 광주 행사
         <button class="more" id="festMore">전체 보기</button></p>
@@ -543,28 +536,6 @@ a{color:var(--acc-text)}
       </div>
     </div>
 
-    <div class="mybox">
-      <p class="bl-t"><svg style="width:18px;height:18px"><use href="#i-shop"/></svg>사장님이신가요?</p>
-      <div id="ownDone" hidden>
-        <p class="badge-own"><svg><use href="#i-badge"/></svg><span id="ownName"></span></p>
-        <div class="srow">
-          <a class="call" id="ownOpen" href="owner.html" style="flex:1;justify-content:center">가게 관리 열기</a>
-          <button class="ghost" id="ownOut">해제</button>
-        </div>
-      </div>
-      <div id="ownStart">
-        <p class="ct">가게를 등록하면 '지금 자리 있어요'와 영업시간이 방문객 일정에 실시간 반영돼요.</p>
-        <div class="srow">
-          <input id="ownQ" placeholder="가게 이름으로 검색" enterkeyhint="search">
-          <button class="primary" id="ownSearch">검색</button>
-        </div>
-        <div class="olist" id="ownResults"></div>
-        <div id="ownMethods" hidden></div>
-        <div class="ownform" id="ownForm" hidden></div>
-        <p class="ownmsg" id="ownMsg" hidden></p>
-      </div>
-    </div>
-
     <div class="mybox disabled-card">
       <p class="bl-t" style="margin-bottom:4px">간편 가입 (준비 중)</p>
       <p class="ct">쿠폰·일정 동기화는 운영 단계에 열려요. 지금은 아무것도 수집하지 않습니다.</p>
@@ -573,6 +544,12 @@ a{color:var(--acc-text)}
     <div class="mylist">
       <div class="setrow"><span>큰 글씨</span>
         <label class="switch"><input type="checkbox" id="optSenior"><i></i></label></div>
+      <!-- DEV-ONLY-START: 유리 검증 진입점 — build_deploy가 공개판에서 이 블록을 제거한다 -->
+      <div class="setrow"><span>글래스 목업 (개발)</span>
+        <a href="glass_mock.html" style="font-size:13px;font-weight:600">열기</a></div>
+      <div class="setrow"><span>굴절 검증 (개발)</span>
+        <a href="glass_test.html" style="font-size:13px;font-weight:600">열기</a></div>
+      <!-- DEV-ONLY-END -->
       <div class="setrow"><span>데이터 출처</span>
         <span class="ct" style="font-size:12.5px;color:var(--sub);text-align:right">TourAPI · 소상공인시장진흥공단<br>카카오 · KTO 무장애 · 기상청</span></div>
     </div>

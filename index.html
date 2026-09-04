@@ -1,622 +1,515 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#F8FAFC">
+<meta name="theme-color" content="#D6E9F7">
 <title>광주잇다</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<style>
-/* ═══ 트랜짓 팔레트 (ui-ux-pro-max colors №155) + 유리 3등급 ═══ */
-:root{
-  --paper:#F8FAFC; --ink:#0F172A; --sub:#475569; --line:rgba(15,23,42,.12);
-  --acc:#2563EB; --acc-deep:#1D4ED8; --acc-text:#1D4ED8; --on-acc:#fff;
-  --ok:#0E7A4F; --warn:#A65A1E; --card:#FFFFFF;
-  --map-a:#E9EDF2; --map-b:#DCE3EA; --glass-tint:250,251,253;
-  --glass-bg:linear-gradient(180deg, rgba(var(--glass-tint),.20), rgba(var(--glass-tint),.44));
-  --glass-shadow:0 24px 60px rgba(0,0,0,.26),
-    inset 0 1px 1px rgba(255,255,255,.55),
-    inset 0 -8px 20px rgba(255,255,255,.10),
-    inset 0 0 0 1px rgba(255,255,255,.22);
-  --glass-blur:blur(14px) saturate(160%);
-  --bar-bg:rgba(var(--glass-tint),.62);
-  --ctl-glass:rgba(var(--glass-tint),.58);
-  --acc-glass:color-mix(in srgb, var(--acc) 94%, transparent);
-  --ctl-rim:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.18);
-  --fs-xs:14px; --fs-s:15.5px; --fs-m:17px; --fs-l:20px; --fs-xl:24px;
-  --tab-h:64px;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --paper:#0E1013; --ink:#E8EAEE; --sub:#A6ADB8; --line:rgba(232,234,238,.12);
-    --acc:#5B8DF6; --acc-deep:#3E6FE0; --acc-text:#8AB0FF;
-    --ok:#4ADE97; --warn:#E8A13A; --card:#181B20;
-    --map-a:#15181C; --map-b:#1D2126; --glass-tint:14,14,22;
-    --glass-bg:linear-gradient(180deg, rgba(var(--glass-tint),.18), rgba(var(--glass-tint),.38));
-    --glass-shadow:0 24px 60px rgba(0,0,0,.45),
-      inset 0 1px 1px rgba(255,255,255,.5),
-      inset 0 -8px 20px rgba(255,255,255,.06),
-      inset 0 0 0 1px rgba(255,255,255,.13);
-    --glass-blur:blur(14px) saturate(150%);
-    --bar-bg:rgba(16,17,20,.58);
-    --ctl-glass:rgba(var(--glass-tint),.68);
-    --ctl-rim:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.09);
-  }
-}
-html.senior{font-size:112%}   /* 설정: 큰 글씨 */
-
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{background:var(--paper);font-family:"IBM Plex Sans KR",system-ui,sans-serif;
-  font-size:var(--fs-m);line-height:1.5;color:var(--ink);
-  -webkit-font-smoothing:antialiased;overflow:hidden}
-button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-svg{display:block}
-a{color:var(--acc-text)}
-
-.stage{position:relative;height:100dvh;max-width:430px;margin:0 auto;
-  background:var(--paper);overflow:hidden}
-
-/* ═══ L0 지도 ═══ */
-#map{position:absolute;inset:0}
-#map .fallback{position:absolute;inset:0;
-  background:
-    repeating-linear-gradient(0deg,transparent 0 46px,var(--map-b) 46px 47px),
-    repeating-linear-gradient(90deg,transparent 0 46px,var(--map-b) 46px 47px),
-    var(--map-a)}
-#map .fallback span{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);
-  font-size:var(--fs-xs);color:var(--sub);letter-spacing:.12em}
-
-/* ═══ L1 조건 칩 바 ═══ */
-.chipbar{position:absolute;top:0;left:0;right:0;z-index:20;
-  display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;
-  padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;
-  background:var(--bar-bg);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:inset 0 -1px 0 var(--line),inset 0 1px 0 rgba(255,255,255,.3)}
-.chip{display:flex;align-items:center;gap:5px;min-height:44px;flex:none;
-  white-space:nowrap;padding:0 13px;border-radius:99px;
-  background:var(--ctl-glass);box-shadow:var(--ctl-rim);
-  backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);
-  font-size:var(--fs-s);font-weight:600;transition:transform .25s ease-out}
-.chip:active{transform:scale(.95)}
-.chip.set{background:var(--acc-glass);color:var(--on-acc);
-  backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(255,255,255,.14)}
-.chip.miss{animation:nudge .4s ease-out 2}
-@keyframes nudge{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.chip svg{width:14px;height:14px;opacity:.7}
-.chip.mic{margin-left:auto;width:44px;justify-content:center;padding:0}
-.chip.mic svg{width:20px;height:20px;opacity:1;color:var(--acc-text)}
-
-/* ═══ L2 바텀시트 ═══ */
-.sheet{position:absolute;left:0;right:0;bottom:var(--tab-h);z-index:25;
-  height:calc(100dvh - var(--tab-h));border-radius:24px 24px 0 0;
-  background:var(--glass-bg);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:var(--glass-shadow);
-  transform:translateY(calc(100% - 156px));
-  transition:transform .45s ease-out;
-  display:flex;flex-direction:column;touch-action:none}
-.sheet.half{transform:translateY(50%)}
-.sheet.full{transform:translateY(7%)}
-.sheet.drag{transition:none}
-.grip{flex:none;width:100%;padding:10px 0 4px;display:grid;place-items:center;cursor:grab}
-.grip::before{content:"";width:36px;height:5px;border-radius:3px;background:var(--line)}
-.sheet-body{flex:1;overflow-y:auto;overscroll-behavior:contain;
-  padding:4px 12px calc(env(safe-area-inset-bottom) + 24px)}
-
-.st{display:none}
-.state-start .st-start{display:block}
-.state-compute .st-compute{display:block}
-.state-result .st-result{display:block}
-
-/* ═══ 탭 게이트 — 일정(지도+칩바+시트)은 plan 탭에서만, 나머지 탭은 풀페이지 ═══ */
-.chipbar,.sheet{display:none}
-.stage[data-tab="plan"] .chipbar{display:flex}
-.stage[data-tab="plan"] .sheet{display:flex}
-.stage:not([data-tab="plan"]) .event{display:none}
-.page{position:absolute;inset:0 0 var(--tab-h);z-index:15;display:none;
-  overflow-y:auto;overscroll-behavior:contain;background:var(--paper);
-  padding:calc(env(safe-area-inset-top) + 18px) 16px 28px}
-.stage[data-tab="home"] .page-home{display:block}
-.stage[data-tab="maybe"] .page-maybe{display:block}
-.stage[data-tab="fest"] .page-fest{display:block}
-.stage[data-tab="my"] .page-my{display:block}
-
-/* 시작 */
-.cta{display:block;width:100%;min-height:56px;border-radius:9999px;
-  background:var(--acc-glass);color:var(--on-acc);font-size:var(--fs-l);font-weight:700;
-  backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(0,0,0,.22),
-    0 8px 24px rgba(0,0,0,.22);
-  transition:transform .3s ease-out}
-.cta:active{transform:scale(.97)}
-.hintline{margin-top:10px;text-align:center;font-size:var(--fs-xs);color:var(--sub)}
-
-/* 계산 로그 */
-.log{list-style:none;padding:4px 6px}
-.log li{display:flex;gap:10px;align-items:center;min-height:40px;
-  font-size:var(--fs-s);color:var(--sub);opacity:.35;transition:opacity .3s}
-.log li.on{opacity:1;color:var(--ink);font-weight:600}
-.log li.done{opacity:.8}
-.log .dot{width:22px;height:22px;border-radius:50%;flex:none;
-  border:2px solid var(--line);display:grid;place-items:center}
-.log li.on .dot{border-color:var(--acc);animation:pulse 1s infinite}
-.log li.done .dot{border-color:var(--ok);background:var(--ok)}
-.log li.done .dot svg{width:12px;height:12px;color:#fff}
-@keyframes pulse{50%{transform:scale(1.18)}}
-@media (prefers-reduced-motion: reduce){
-  .log li.on .dot{animation:none}
-  .chip.miss{animation:none;outline:2px solid var(--warn)}
-}
-
-/* 결과 */
-.deadline{display:flex;align-items:center;gap:10px;margin:2px 4px 6px;flex-wrap:wrap}
-.capsule{font-weight:700;font-size:var(--fs-l);padding:8px 16px;border-radius:99px;
-  background:var(--glass-bg);box-shadow:var(--glass-shadow);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  font-variant-numeric:tabular-nums}
-.deadline small{color:var(--sub);font-size:var(--fs-xs);
-  background:var(--bar-bg);padding:5px 10px;border-radius:8px;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.nowline{font-size:var(--fs-s);color:var(--sub);margin:0 4px 14px;
-  background:var(--bar-bg);border-radius:10px;padding:7px 12px;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.nowline b{color:var(--ink)}
-.aiwhy{font-size:var(--fs-xs);color:var(--sub);margin:-6px 4px 14px;padding:7px 12px;
-  border-left:3px solid var(--acc);background:var(--bar-bg);border-radius:0 10px 10px 0;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.aiwhy b{color:var(--acc-text)}
-
-.thread{list-style:none;position:relative;padding-left:30px;margin:0 4px}
-.thread::before{content:"";position:absolute;left:10px;top:14px;bottom:14px;
-  width:2px;border-left:2px dashed var(--acc);opacity:.7}
-.thread>li{position:relative;padding-bottom:10px}
-.thread .node{position:absolute;left:-30px;top:14px;width:22px;height:22px;
-  border-radius:50%;background:var(--acc);color:#fff;
-  font:700 12px/22px "IBM Plex Sans KR";text-align:center;
-  box-shadow:0 0 0 3px var(--paper)}
-.stop{background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:12px 14px;box-shadow:0 3px 12px rgba(15,23,42,.07)}
-.stop .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.stop .name{font-weight:700;font-size:var(--fs-m)}
-.stop .time{font-variant-numeric:tabular-nums;font-weight:600;color:var(--acc-text);
-  font-size:var(--fs-s);white-space:nowrap}
-.tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.tag{font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:99px;
-  background:rgba(14,122,79,.1);color:var(--ok)}
-.tag.owner{background:var(--ok);color:#fff}
-.tag.seat{background:rgba(37,99,235,.12);color:var(--acc-text)}
-.move{margin:2px 0 12px;font-size:var(--fs-xs);color:var(--sub);
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--bar-bg);padding:5px 11px;border-radius:8px;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.move svg{width:13px;height:13px}
-.empty{background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:14px;margin:0 4px;font-size:var(--fs-s);color:var(--sub)}
-
-.receipt{margin:14px 4px 0;background:var(--card)
-  radial-gradient(rgba(15,23,42,.03) 1px,transparent 1px);
-  background-size:4px 4px;border-radius:4px;padding:14px 16px;position:relative;
-  filter:drop-shadow(0 3px 8px rgba(15,23,42,.12))}
-.receipt summary{list-style:none;display:flex;justify-content:space-between;
-  align-items:center;cursor:pointer;font-weight:700;font-size:var(--fs-s);gap:8px}
-.receipt summary::-webkit-details-marker{display:none}
-.receipt .nums{font-variant-numeric:tabular-nums;color:var(--sub);font-weight:600;
-  white-space:nowrap}
-.receipt .nums b{color:var(--ok)}
-.receipt .detail{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
-  font-size:var(--fs-xs);color:var(--sub);line-height:1.8}
-.receipt .relax{color:var(--warn);font-weight:600}
-.again{display:block;width:100%;min-height:48px;margin:14px 0 0;border-radius:12px;
-  background:var(--ctl-glass);box-shadow:var(--ctl-rim);font-weight:600;
-  font-size:var(--fs-s);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.src{font-size:12.5px;color:var(--sub);margin:16px 4px 0;text-align:center;line-height:1.6}
-
-/* 들러볼 곳 · 설정 */
-.pane h3{font-size:var(--fs-m);margin:6px 4px 10px}
-.pane h3 small{display:block;font-weight:500;color:var(--sub);font-size:var(--fs-xs)}
-.mcard{background:var(--card);border:1px dashed var(--line);border-radius:12px;
-  padding:12px 14px;margin:0 4px 10px;display:flex;justify-content:space-between;
-  align-items:center;gap:10px}
-.mcard .nm{font-weight:700}
-.mcard .ct{font-size:var(--fs-xs);color:var(--sub)}
-.call{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;
-  padding:0 14px;border-radius:99px;background:var(--acc-glass);color:var(--on-acc);
-  font-size:var(--fs-xs);font-weight:700;text-decoration:none}
-.call svg{width:15px;height:15px}
-.setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
-  background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:14px;margin:0 4px 10px}
-.switch{position:relative;width:52px;height:32px;flex:none}
-.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.switch i{position:absolute;inset:0;border-radius:99px;background:var(--line);
-  transition:background .2s}
-.switch i::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;
-  border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);
-  transition:transform .25s ease-out}
-.switch input:checked + i{background:var(--ok)}
-.switch input:checked + i::after{transform:translateX(20px)}
-
-/* 이벤트 카드 */
-.event{position:absolute;left:14px;right:14px;bottom:calc(var(--tab-h) + 14px);
-  z-index:40;border-radius:18px;background:var(--glass-bg);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:var(--glass-shadow);padding:14px 16px;
-  transform:translateY(calc(100% + var(--tab-h) + 60px));visibility:hidden;
-  transition:transform .45s ease-out,visibility 0s .45s}
-.event.show{transform:none;visibility:visible;transition:transform .45s ease-out}
-.event .msg{display:flex;gap:10px;align-items:center;font-weight:600;font-size:var(--fs-s)}
-.event .msg svg{width:20px;height:20px;color:var(--warn);flex:none}
-.event.applied .msg svg{color:var(--ok)}
-.event .diff{font-size:var(--fs-xs);color:var(--sub);margin-top:6px;display:none}
-.event.applied .diff{display:block}
-.event .row{display:flex;gap:10px;margin-top:12px}
-.event .row button{flex:1;min-height:46px;border-radius:12px;font-weight:700;
-  font-size:var(--fs-s)}
-.event .yes{background:var(--acc-glass);color:var(--on-acc);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
-.event.applied .yes{display:none}
-.event .no{background:var(--ctl-glass);box-shadow:var(--ctl-rim);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.event.applied .no{flex:none;padding:0 18px}
-
-/* 픽커 오버레이 */
-.picker{position:absolute;inset:0;z-index:50;display:none;align-items:flex-end}
-.picker.open{display:flex}
-.picker .scrim{position:absolute;inset:0;background:rgba(10,12,16,.35)}
-.picker .panel{position:relative;width:100%;border-radius:24px 24px 0 0;
-  background:var(--glass-bg);backdrop-filter:var(--glass-blur);
-  -webkit-backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow);
-  padding:18px 16px calc(env(safe-area-inset-bottom) + 20px);
-  animation:rise .35s ease-out}
-@keyframes rise{from{transform:translateY(40%)}}
-@media (prefers-reduced-motion: reduce){ .picker .panel{animation:none} }
-.picker h4{font-size:var(--fs-l);margin:0 4px 12px}
-.opts{display:flex;flex-wrap:wrap;gap:10px}
-.opt{min-height:52px;padding:0 18px;border-radius:14px;font-size:var(--fs-m);
-  font-weight:600;background:var(--card);border:1px solid var(--line);flex:1 1 40%}
-.opt.on{background:var(--acc-glass);color:var(--on-acc);border-color:transparent}
-.opt.on::before{content:"✓ "}
-
-/* 음성 시트 */
-.vsheet{position:absolute;left:0;right:0;bottom:0;z-index:55;
-  border-radius:24px 24px 0 0;background:var(--glass-bg);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:var(--glass-shadow);
-  padding:20px 16px calc(env(safe-area-inset-bottom) + 20px);
-  transform:translateY(110%);visibility:hidden;
-  transition:transform .45s ease-out,visibility 0s .45s}
-.vsheet.show{transform:none;visibility:visible;transition:transform .45s ease-out}
-.vsheet .heard{font-size:var(--fs-l);font-weight:700;margin:0 4px 6px}
-.vsheet .parsed{font-size:var(--fs-s);color:var(--sub);margin:0 4px 12px}
-.vsheet .parsed b{color:var(--acc-text)}
-.vsheet input{width:100%;min-height:48px;border-radius:12px;border:1px solid var(--line);
-  background:var(--card);color:var(--ink);padding:0 14px;font:inherit;margin-bottom:12px}
-.vsheet .row{display:flex;gap:10px}
-.vsheet .row button{flex:1;min-height:48px;border-radius:12px;font-weight:700;
-  font-size:var(--fs-s)}
-.vsheet .go2{background:var(--acc-glass);color:var(--on-acc)}
-.vsheet .re{background:var(--ctl-glass);box-shadow:var(--ctl-rim)}
-
-/* ═══ 홈 ═══ */
-.home-hd{margin:6px 4px 20px}
-.wordmark{font-size:var(--fs-s);font-weight:700;color:var(--acc-text);letter-spacing:.02em}
-.home-hd h2{font-size:26px;line-height:1.32;margin-top:6px;text-wrap:balance}
-.pg-t{font-size:var(--fs-l);margin:4px 4px 14px}
-.hblock{margin-bottom:24px}
-.bl-t{display:flex;align-items:center;gap:8px;font-size:var(--fs-s);font-weight:700;
-  margin:0 4px 10px}
-.bl-t .more{margin-left:auto;color:var(--acc-text);font-size:var(--fs-xs);font-weight:600;
-  min-height:32px;padding:0 6px}
-.qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;
-  padding:16px;box-shadow:0 4px 16px rgba(15,23,42,.06)}
-.qcard .lead{font-weight:700;font-size:var(--fs-m);margin-bottom:12px}
-.qrow{display:flex;gap:8px}
-.qrow button{flex:1;min-height:56px;border-radius:12px;font-weight:700;font-size:var(--fs-s);
-  background:color-mix(in srgb, var(--acc) 10%, transparent);color:var(--acc-text);
-  transition:transform .25s ease-out}
-.qrow button:active{transform:scale(.96)}
-.qhint{font-size:var(--fs-xs);color:var(--sub);margin-top:10px}
-.nearby{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
-  min-height:50px;margin-top:8px;border-radius:12px;font-weight:700;font-size:var(--fs-s);
-  background:var(--acc-glass);color:var(--on-acc);
-  backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:transform .25s ease-out}
-.nearby:active{transform:scale(.97)}
-.nearby .nb-note{font-size:11.5px;font-weight:500;opacity:.85}
-.nearby.busy{opacity:.6;pointer-events:none}
-.livechip{font-size:12px;font-weight:700;color:var(--ok);background:rgba(14,122,79,.12);
-  padding:2px 8px;border-radius:99px}
-.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;
-  margin:0 -16px;padding:2px 16px 6px}
-.hcard{flex:none;width:190px;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;padding:12px 14px;text-align:left}
-.hcard .nm{font-weight:700;font-size:var(--fs-s);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis}
-.hcard .ct{font-size:var(--fs-xs);color:var(--sub);margin-top:3px;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-.zrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.zcard{background:var(--card);border:1px solid var(--line);border-radius:14px;
-  padding:14px 12px;text-align:left;transition:transform .25s ease-out}
-.zcard:active{transform:scale(.96)}
-.zcard .zn{font-weight:700;font-size:var(--fs-s)}
-.zcard .zc{font-size:12.5px;color:var(--sub);margin-top:3px}
-.truststrip{font-size:12.5px;color:var(--sub);text-align:center;margin:0 4px}
-
-/* ═══ 마이페이지 · 사장님 온보딩 ═══ */
-.mybox{background:var(--card);border:1px solid var(--line);border-radius:16px;
-  padding:16px;margin:0 4px 16px}
-.mybox .ct{font-size:var(--fs-xs);color:var(--sub);line-height:1.6}
-.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;
-  padding:10px 4px;text-align:center}
-.stat b{display:block;font-size:var(--fs-l);font-variant-numeric:tabular-nums}
-.stat span{font-size:12px;color:var(--sub)}
-.srow{display:flex;gap:8px;margin-top:12px}
-.srow input{flex:1;min-width:0;min-height:48px;border-radius:12px;border:1px solid var(--line);
-  background:var(--paper);color:var(--ink);padding:0 12px;font:inherit}
-.srow .primary{flex:none;min-width:76px;min-height:48px;border-radius:12px;
-  background:var(--acc-glass);color:var(--on-acc);font-weight:700;font-size:var(--fs-s)}
-.srow .ghost{flex:none;min-height:48px;padding:0 14px;border-radius:12px;
-  background:var(--ctl-glass);box-shadow:var(--ctl-rim);font-weight:600;font-size:var(--fs-xs)}
-.olist{margin-top:6px}
-.olist button{display:flex;width:100%;justify-content:space-between;align-items:center;
-  gap:8px;min-height:52px;padding:8px 4px;border-bottom:1px solid var(--line);text-align:left}
-.olist .on{font-weight:700;font-size:var(--fs-s)}
-.olist .oa{font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis}
-.olist .odone{flex:none;font-size:12px;color:var(--ok);font-weight:700}
-.ownform input{width:100%;min-height:48px;border-radius:12px;border:1px solid var(--line);
-  background:var(--paper);color:var(--ink);padding:0 12px;font:inherit;margin-top:8px}
-.ownmsg{font-size:var(--fs-xs);margin-top:10px;font-weight:600}
-.ownmsg.err{color:var(--warn)}
-.ownmsg.ok{color:var(--ok)}
-.badge-own{display:flex;align-items:center;gap:7px;color:var(--ok);font-weight:700;
-  font-size:var(--fs-s)}
-.badge-own svg{width:19px;height:19px}
-.mylist{margin:0 4px}
-.mylist .setrow{margin:0 0 10px}
-.disabled-card{opacity:.55}
-
-/* 탭바 — 중앙 일정 버튼 융기 */
-.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:30;height:var(--tab-h);
-  display:flex;background:var(--bar-bg);
-  backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  box-shadow:inset 0 1px 0 var(--line);
-  padding-bottom:env(safe-area-inset-bottom)}
-.tabbar button{flex:1;display:flex;flex-direction:column;gap:3px;
-  align-items:center;justify-content:center;font-size:12px;font-weight:600;
-  color:var(--sub)}
-.tabbar button.on{color:var(--acc-text)}
-.tabbar svg{width:22px;height:22px}
-.tabbar .big .orb{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
-  margin-top:-30px;background:var(--acc-glass);color:var(--on-acc);
-  backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);
-  box-shadow:0 8px 20px rgba(37,99,235,.4),inset 0 1px 0 rgba(255,255,255,.32),
-    0 0 0 4px var(--paper)}
-.tabbar .big svg{width:25px;height:25px}
-</style>
+<link rel="stylesheet" href="flow.css?v=1788496097">
 </head>
 <body>
-<svg width="0" height="0" aria-hidden="true"><defs>
-  <!-- 아이콘: Lucide (lucide.dev, ISC) — symbol viewBox라 어떤 크기로 써도 정확히 스케일 -->
-  <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></symbol>
-  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
-  <symbol id="i-walk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></symbol>
-  <symbol id="i-bus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></symbol>
-  <symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
-  <symbol id="i-shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2Z"/></symbol>
-  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
-  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
-  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
-  <symbol id="i-badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></symbol>
-  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
-</defs></svg>
 
-<div class="stage state-start" id="stage" data-tab="home">
+<!-- 픽토그램 스프라이트 (Lucide, ISC License, https://lucide.dev — 24 그리드 / stroke 2 / round cap·join).
+     외부 파일 <use href="icons.svg#..."> 는 Android WebView에서 로딩 실패 사례가 있어 인라인으로 둔다(기준 §0). -->
+<svg style="display:none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+  <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
+  <symbol id="i-landmark" viewBox="0 0 24 24"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></symbol>
+  <symbol id="i-footprints" viewBox="0 0 24 24"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-train-front" viewBox="0 0 24 24"><path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/></symbol>
+  <symbol id="i-bus-front" viewBox="0 0 24 24"><path d="M4 6 2 7"/><path d="M10 6h4"/><path d="m22 7-2-1"/><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M8 15h.01"/><path d="M16 15h.01"/><path d="M6 19v2"/><path d="M18 21v-2"/></symbol>
+  <symbol id="i-car-taxi-front" viewBox="0 0 24 24"><path d="M10 2h4"/><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></symbol>
+  <symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+  <!-- 나침반: 침은 위아래(수직), 북쪽(위)만 빨강 — 대각선 침은 어느 쪽이 북인지 안 읽힌다(2026-09-04 대표 지시).
+       fill은 표현속성이라 .ic{fill:none} 상속을 이긴다(자기 선언이 상속보다 우선). stroke=none이 없으면 .ic의 굵은 선이 침을 덮는다. -->
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="12 5 14.4 12 9.6 12" fill="#C62828" stroke="none"/><polygon points="12 19 9.6 12 14.4 12" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-locate-fixed" viewBox="0 0 24 24"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+  <symbol id="i-list-checks" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 5h.01"/><path d="M3 12h.01"/><path d="M3 19h.01"/><path d="M8 5h13"/><path d="M8 12h13"/><path d="M8 19h13"/></symbol>
+  <symbol id="i-arrow-left-right" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></symbol>
+  <symbol id="i-circle-minus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></symbol>
+  <symbol id="i-pin-off" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89"/><path d="m2 2 20 20"/><path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11"/></symbol>
+  <symbol id="i-grip-vertical" viewBox="0 0 24 24"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></symbol>
+  <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-calendar-check" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></symbol>
+  <symbol id="i-credit-card" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></symbol>
+  <symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-circle-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-undo-2" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/></symbol>
+  <symbol id="i-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></symbol>
+  <symbol id="i-calendar-days" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+  <symbol id="i-volume-2" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></symbol>
+  <symbol id="i-external-link" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/></symbol>
+  <symbol id="i-luggage" viewBox="0 0 24 24"><path d="M6 20a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"/><path d="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"/><path d="M10 20h4"/><circle cx="16" cy="20" r="2"/><circle cx="8" cy="20" r="2"/></symbol>
+  <symbol id="i-arrow-right-from-line" viewBox="0 0 24 24"><path d="M3 5v14"/><path d="M21 12H7"/><path d="m15 18 6-6-6-6"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <!-- 취향·내 정보(2026-09-04, AI일정_취향_설계 §1·§2) -->
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></symbol>
+  <symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></symbol>
+  <symbol id="i-soup" viewBox="0 0 24 24"><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/><path d="M7 21h10"/><path d="M19.5 12 22 6"/><path d="M16.25 3c.27.1.8.53.75 1.36-.06.83-.93 1.2-1 2.02-.05.78.34 1.24.73 1.62"/><path d="M11.25 3c.27.1.8.53.74 1.36-.05.83-.93 1.2-.98 2.02-.06.78.33 1.24.72 1.62"/><path d="M6.25 3c.27.1.8.53.75 1.36-.06.83-.93 1.2-1 2.02-.05.78.34 1.24.73 1.62"/></symbol>
+  <symbol id="i-pizza" viewBox="0 0 24 24"><path d="m12 14-1 1"/><path d="m13.75 18.25-1.25 1.42"/><path d="M17.775 5.654a15.68 15.68 0 0 0-12.121 12.12"/><path d="M18.8 9.3a1 1 0 0 0 2.1 7.7"/><path d="M21.964 20.732a1 1 0 0 1-1.232 1.232l-18-5a1 1 0 0 1-.695-1.232A19.68 19.68 0 0 1 15.5 2.037a1 1 0 0 1 1.232.695z"/></symbol>
+  <symbol id="i-fish" viewBox="0 0 24 24"><path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M16 17.93a9.77 9.77 0 0 1 0-11.86"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/><path d="M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4"/><path d="m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98"/></symbol>
+  <symbol id="i-utensils-crossed" viewBox="0 0 24 24"><path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="M2.1 21.8 13 11"/><path d="m9 11 4 4"/></symbol>
+  <symbol id="i-sandwich" viewBox="0 0 24 24"><path d="m2.37 11.223 8.372-6.777a2 2 0 0 1 2.516 0l8.371 6.777"/><path d="M21 15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1"/><path d="M3.109 11h17.782a1 1 0 0 1 .994 1.11l-.19 1.804A1 1 0 0 1 20.7 15H3.3a1 1 0 0 1-.995-.905l-.19-1.783A1 1 0 0 1 3.11 11z"/><path d="M4 19h16"/></symbol>
+  <symbol id="i-croissant" viewBox="0 0 24 24"><path d="m4.6 13.11 5.79-3.21c1.89-1.05 4.79 1.78 3.71 3.71l-3.22 5.81C8.8 23.16.79 15.29 4.6 13.11Z"/><path d="m10.5 9.5-1-2.29C9.2 6.48 8.8 6 8 6H4.5C2.79 6 2 6.5 2 8.5a7.71 7.71 0 0 0 2 4.83"/><path d="M8 6c0-1.55.24-4-2-4-2 0-2.5 2.17-2.5 4"/><path d="m14.5 13.5 2.29 1c.73.3 1.21.7 1.21 1.5v3.5c0 1.71-.5 2.5-2.5 2.5a7.71 7.71 0 0 1-4.83-2"/><path d="M18 16c1.55 0 4-.24 4 2 0 2-2.17 2.5-4 2.5"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M4 20h3v-4h3v-4h3V8h3V4h4"/></symbol>
+  <!-- 날씨 배경(2026-09-04, 기상청 초단기예보) -->
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+  <symbol id="i-cloud-sun" viewBox="0 0 24 24"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></symbol>
+  <symbol id="i-cloud-rain" viewBox="0 0 24 24"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+</svg>
+<!-- 홈 오브 굴절 필터가 들어가는 곳 (flow.js가 지오메트리마다 <filter>를 만들어 넣는다. 오브 1개에만) -->
+<svg id="lgFilters" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"></svg>
 
-  <div id="map"><div class="fallback"><span>지도 준비 중</span></div></div>
-
-  <header class="chipbar">
-    <button class="chip" id="chipDl" aria-pressed="false">마감 <svg><use href="#i-chev"/></svg></button>
-    <button class="chip" id="chipOg" aria-pressed="false">출발 <svg><use href="#i-chev"/></svg></button>
-    <button class="chip" id="chipCp" aria-pressed="false">동행 <svg><use href="#i-chev"/></svg></button>
-    <button class="chip mic" id="voice" aria-label="말로 입력하기"><svg><use href="#i-mic"/></svg></button>
-  </header>
-
-  <section class="sheet" id="sheet" aria-label="일정">
-    <button class="grip" id="grip" aria-label="시트 크기 바꾸기"></button>
-    <div class="sheet-body">
-
-      <div class="pane pane-plan">
-        <div class="st st-start">
-          <button class="cta" id="go">일정 만들기</button>
-          <p class="hintline">문 연 곳과 이동시간을 검증해서 짜 드려요</p>
-        </div>
-
-        <div class="st st-compute">
-          <ul class="log" id="log" aria-live="polite">
-            <li><span class="dot"><svg><use href="#i-check"/></svg></span><span id="log1">영업시간 확인</span></li>
-            <li><span class="dot"><svg><use href="#i-check"/></svg></span><span id="log2">이동시간 검증</span></li>
-            <li><span class="dot"><svg><use href="#i-check"/></svg></span><span id="log3">순서 조합</span></li>
-          </ul>
-        </div>
-
-        <div class="st st-result">
-          <div class="deadline">
-            <span class="capsule" id="count">–</span>
-            <small id="deadNote"></small>
-          </div>
-          <p class="nowline" id="nowline"></p>
-          <p class="aiwhy" id="aiWhy" hidden></p>
-          <ul class="thread" id="thread"></ul>
-          <div class="empty" id="emptyMsg" hidden></div>
-          <details class="receipt" id="receipt">
-            <summary>검증 영수증 <span class="nums" id="rNums"></span></summary>
-            <div class="detail" id="rDetail"></div>
-          </details>
-          <button class="again" id="again">조건 다시 정하기</button>
-          <p class="src">출처: 한국관광공사 · 소상공인시장진흥공단 · 카카오 · KTO 무장애 | 이동시간은 추정치</p>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <div class="page page-home">
-    <header class="home-hd">
-      <div class="wordmark">광주잇다</div>
-      <h2>광주에서<br>시간이 비었나요?</h2>
-    </header>
-
-    <section class="hblock">
-      <div class="qcard">
-        <p class="lead">얼마나 있다 가세요?</p>
-        <div class="qrow" id="qStart">
-          <button data-dl="2시간">2시간</button>
-          <button data-dl="3시간">3시간</button>
-          <button data-dl="6:20 기차">6:20 기차</button>
-        </div>
-        <button class="nearby" id="btnNearby">
-          <svg style="width:16px;height:16px"><use href="#i-pin"/></svg>내 주변에서 시작
-          <span class="nb-note">위치는 이 폰 안에서만 써요</span></button>
-        <p class="qhint">문 연 곳과 이동시간을 검증해 일정을 짜 드려요</p>
-      </div>
-    </section>
-
-    <section class="hblock" id="seatBlock" hidden>
-      <p class="bl-t">지금 자리 있어요 <span class="livechip">사장님 실시간</span></p>
-      <div class="hscroll" id="seatCards"></div>
-    </section>
-
-    <section class="hblock" id="festBlock" hidden>
-      <p class="bl-t">지금 광주 행사
-        <button class="more" id="festMore">전체 보기</button></p>
-      <div class="hscroll" id="festCards"></div>
-    </section>
-
-    <section class="hblock">
-      <p class="bl-t">권역으로 시작</p>
-      <div class="zrow" id="zoneCards"></div>
-    </section>
-
-    <p class="truststrip">확인된 곳만 · 검증 영수증 · 위치정보 무수집(단말 내 이용)</p>
-    <p class="src">출처: 한국관광공사 · 소상공인시장진흥공단 · 카카오 · KTO 무장애</p>
+<!-- 1. 홈: 큰 질문 + 오브 + 입력 바 (누를 수 있는 것 2개) -->
+<section class="scr scr-sky on" id="scrHome">
+  <div>
+    <div class="h-top"><div class="wx-tag" id="wxTag" hidden aria-live="polite"></div><button class="who-tag" id="whoTag" type="button" hidden aria-label="시민·여행객 바꾸기"><svg class="ic ic-s" id="whoIcon" aria-hidden="true"><use href="#i-luggage"></use></svg><span id="whoName">여행객</span><svg class="ic ic-s caret" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button></div>
+    <div class="h-q" id="homeWhere">지금 <button class="where-pill" id="wherePill" type="button" aria-label="위치 바꾸기: 광주"><span id="whereName">광주</span><svg class="ic ic-s caret" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button>에서</div>
+    <div class="h-q" id="homeQ2">뭘 하다 가실래요?</div>
+    <button class="locline" id="locLine" hidden></button>
+    <button class="locline" id="resumeLine" hidden></button>
   </div>
-
-  <div class="page page-maybe">
-    <h3 class="pg-t">들러볼 곳</h3>
-    <p class="ct" style="font-size:var(--fs-xs);color:var(--sub);margin:0 4px 14px">
-      영업시간 미확인이라 순서에 넣지 않았어요. 가기 전에 전화로 확인하세요.</p>
-    <div id="maybeList"></div>
-  </div>
-
-  <div class="page page-fest">
-    <h3 class="pg-t">광주 행사</h3>
-    <div id="festList"></div>
-    <p class="src" id="festSrc">출처: 한국관광공사 TourAPI</p>
-  </div>
-
-  <div class="page page-my">
-    <h3 class="pg-t">마이페이지</h3>
-
-    <div class="mybox">
-      <p class="bl-t" style="margin-bottom:4px">이 폰의 별명</p>
-      <p class="ct">이 폰에만 저장돼요 — 회원가입·서버 전송 없음</p>
-      <div class="srow">
-        <input id="nick" placeholder="예: 광주 반나절러" maxlength="12">
-        <button class="primary" id="nickSave">저장</button>
+  <div class="h-orbwrap">
+    <div class="orb-bg" aria-hidden="true">
+      <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+        <g fill="none" stroke="#0B57A4" stroke-width="1.6">
+          <circle cx="160" cy="150" r="52"/><circle cx="160" cy="150" r="88"/><circle cx="160" cy="150" r="124"/><circle cx="160" cy="150" r="158"/>
+        </g>
+        <g fill="none" stroke="#0B57A4" stroke-width="7" stroke-linecap="round">
+          <path d="M-20 96 H120 L168 48 H340"/><path d="M-20 236 H96 L156 292 H340"/><path d="M62 -20 V104 L28 140 V340"/><path d="M244 -20 V72 L286 116 V340"/>
+        </g>
+        <g fill="none" stroke="#0B57A4" stroke-width="3">
+          <path d="M-20 168 H340"/><path d="M186 -20 V340"/>
+        </g>
+      </svg>
+    </div>
+    <button class="orb liquid-glass" id="orb" aria-label="누른 채 말하기" data-bezel="22" data-thickness="20" data-magnify="1.08" data-profile="circle">
+      <div class="orb-in">
+        <svg class="ic ic-l orb-mic" aria-hidden="true"><use href="#i-mic"></use></svg>
+        <div class="orb-label" id="orbLabel">말하기</div>
       </div>
-      <div class="statgrid">
-        <div class="stat"><b id="stPlans">0</b><span>만든 일정</span></div>
-        <div class="stat"><b id="stMaybe">0</b><span>들러볼 곳</span></div>
-        <div class="stat"><b>0</b><span>다녀온 곳</span></div>
-        <div class="stat"><b>0</b><span>아낀 시간</span></div>
-      </div>
+      <span class="orb-wave" aria-hidden="true"></span>
+    </button>
+    <div class="h-ex" id="heard" aria-live="polite"></div>
+    <!-- 오브 아래 빠른 부탁 2개: 말한 것과 같은 경로(확인 화면)로 간다 -->
+    <div class="h-quick" id="homeQuick">
+      <button class="qbox" id="qEat" type="button" aria-label="근처 식당 찾아줘 — 지도에 식당만 보여줍니다">
+        <svg class="ic ic-l" aria-hidden="true"><use href="#i-utensils"></use></svg>
+        <span class="qb-t">근처 식당</span>
+        <span class="qb-s">찾아줘</span>
+      </button>
+      <button class="qbox" id="qCafe" type="button" aria-label="근처 카페 찾아줘 — 지도에 카페만 보여줍니다">
+        <svg class="ic ic-l" aria-hidden="true"><use href="#i-coffee"></use></svg>
+        <span class="qb-t">근처 카페</span>
+        <span class="qb-s">찾아줘</span>
+      </button>
     </div>
-
-    <div class="mybox">
-      <p class="bl-t"><svg style="width:18px;height:18px"><use href="#i-shop"/></svg>사장님이신가요?</p>
-      <div id="ownDone" hidden>
-        <p class="badge-own"><svg><use href="#i-badge"/></svg><span id="ownName"></span></p>
-        <div class="srow">
-          <a class="call" id="ownOpen" href="owner.html" style="flex:1;justify-content:center">가게 관리 열기</a>
-          <button class="ghost" id="ownOut">해제</button>
-        </div>
-      </div>
-      <div id="ownStart">
-        <p class="ct">가게를 등록하면 '지금 자리 있어요'와 영업시간이 방문객 일정에 실시간 반영돼요.</p>
-        <div class="srow">
-          <input id="ownQ" placeholder="가게 이름으로 검색" enterkeyhint="search">
-          <button class="primary" id="ownSearch">검색</button>
-        </div>
-        <div class="olist" id="ownResults"></div>
-        <div id="ownMethods" hidden></div>
-        <div class="ownform" id="ownForm" hidden></div>
-        <p class="ownmsg" id="ownMsg" hidden></p>
-      </div>
-    </div>
-
-    <div class="mybox disabled-card">
-      <p class="bl-t" style="margin-bottom:4px">간편 가입 (준비 중)</p>
-      <p class="ct">쿠폰·일정 동기화는 운영 단계에 열려요. 지금은 아무것도 수집하지 않습니다.</p>
-    </div>
-
-    <div class="mylist">
-      <div class="setrow"><span>큰 글씨</span>
-        <label class="switch"><input type="checkbox" id="optSenior"><i></i></label></div>
-      <div class="setrow"><span>데이터 출처</span>
-        <span class="ct" style="font-size:12.5px;color:var(--sub);text-align:right">TourAPI · 소상공인시장진흥공단<br>카카오 · KTO 무장애 · 기상청</span></div>
-    </div>
-    <p class="src" style="text-align:left;margin:16px 8px 0">
-      위치정보를 수집·저장하지 않습니다(단말 내 이용).<br>
-      회원가입 없음 · 팀 Beginnova</p>
+    <button class="home-plan" id="homePlan" type="button" hidden aria-label="오늘 일정 보기"><div class="hp-t" id="homePlanText"></div><div class="hp-s num" id="homePlanSub"></div></button>
   </div>
-
-  <aside class="event" id="event" role="status" aria-live="assertive">
-    <div class="msg"><svg id="evIcon"><use href="#i-bus"/></svg><span id="evText"></span></div>
-    <p class="diff" id="evDiff"></p>
-    <div class="row">
-      <button class="yes" id="evYes">다시 짜기</button>
-      <button class="no" id="evNo">그대로</button>
-    </div>
-  </aside>
-
-  <div class="picker" id="picker">
-    <div class="scrim" id="pickerScrim"></div>
-    <div class="panel"><h4 id="pickerTitle"></h4><div class="opts" id="pickerOpts"></div></div>
+  <div class="h-bottom">
+    <button class="inbar" id="inbar">
+      <svg class="ic ic-l" aria-hidden="true"><use href="#i-send"></use></svg>
+      <span>직접 입력하기</span>
+    </button>
+    <button class="btn-sec" id="btnStepwise" type="button"><svg class="ic" aria-hidden="true"><use href="#i-list-checks"></use></svg>직접 고르기</button>
   </div>
+</section>
 
-  <aside class="vsheet" id="vsheet">
-    <p class="heard" id="vHeard"></p>
-    <p class="parsed" id="vParsed"></p>
-    <input id="vInput" hidden placeholder="예: 어르신과 3시간, 문화전당에서">
-    <div class="row">
-      <button class="go2" id="vApply">이대로 반영</button>
-      <button class="re" id="vRetry">다시 말하기</button>
+<!-- 1-0. 환영 (#scrWelcome) — 첫 진입 첫 장. 이 앱이 뭘 해 주는지 세 줄.
+     itda.who 가 없을 때만 뜬다 = 내 정보 > 개발자 모드 > 저장 데이터 리셋 뒤 다시 켜면 여기부터. -->
+<section class="scr scr-sky" id="scrWelcome" aria-labelledby="welQ">
+  <div class="q" id="welQ">광주에서<br>남는 시간,<br>골목으로.</div>
+  <ul class="wel-list">
+    <li class="wel-row"><svg class="ic ic-l" aria-hidden="true"><use href="#i-mic"></use></svg><div><b>말만 하세요</b><small>"일곱 시 반 기차인데 밥 먹고 싶어요"</small></div></li>
+    <li class="wel-row"><svg class="ic ic-l" aria-hidden="true"><use href="#i-footprints"></use></svg><div><b>걸어갈 만한 곳으로</b><small>실제 걷는 길 기준으로 가까운 순서예요</small></div></li>
+    <li class="wel-row"><svg class="ic ic-l" aria-hidden="true"><use href="#i-train-front"></use></svg><div><b>차 시간 안에</b><small>언제 나가야 하는지 같이 알려 드려요</small></div></li>
+  </ul>
+  <div class="grow"></div>
+  <div class="wel-note">영업 여부처럼 확인 못 한 것은 '미확인'이라고 밝혀요.</div>
+  <button class="next" id="btnWelNext" type="button"><svg class="ic" aria-hidden="true"><use href="#i-chevron-right"></use></svg>시작하기</button>
+</section>
+
+<!-- 1-1. 첫 진입: 광주 시민 · 여행객 · 지역 사장 (v3 2026-09-04, H2가 itda.who로 스킵 판단)
+     지역 사장은 방문객 성격(itda.who)이 아니라 '다른 앱으로 나가는 문'이다 — 누르면 사장님 화면(/store)이 열리고
+     이 화면은 그대로 남는다. 홈 오른쪽 위 '여행객 ▾'로 다시 오는 목록도 이 화면 하나다. -->
+<section class="scr scr-sky" id="scrWho" aria-labelledby="whoQ">
+  <div class="q" id="whoQ">어떤 분이세요?</div>
+  <div class="who-btns">
+    <button class="who-btn" id="btnCitizen" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-house"></use></svg><span>광주 시민<small>광주에 살아요</small></span></button>
+    <button class="who-btn" id="btnTraveler" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-luggage"></use></svg><span>여행객<small>여행 왔어요</small></span></button>
+    <button class="who-btn" id="btnOwner" type="button" aria-label="지역 사장 — 가게 정보 올리는 화면을 엽니다"><svg class="ic ic-l" aria-hidden="true"><use href="#i-store"></use></svg><span>지역 사장<small>가게 정보 올리기</small></span><svg class="ic ic-s who-out" aria-hidden="true"><use href="#i-external-link"></use></svg></button>
+  </div>
+  <div class="grow"></div>
+</section>
+
+<!-- 1-2. 취향 온보딩 (#scrPrefs) — 시민/여행객 다음 1회. 질문 4개, 칩 = 픽토그램 + 한 단어. 칩·저장은 flow.js(itda.prefs.v1) -->
+<section class="scr scr-sky" id="scrPrefs" aria-labelledby="prefsQ">
+  <div class="q" id="prefsQ">뭘 좋아하세요?</div>
+  <div class="pf-groups" id="prefsGroups"></div>
+  <div class="grow"></div>
+  <button class="next" id="btnPrefsNext" type="button"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg>다음</button>
+  <button class="lnk-c" id="btnPrefsSkip" type="button">건너뛰기</button>
+</section>
+
+<!-- 1-3. 내 정보 (#scrMe) — 내비 4번째 탭. 취향 수정(즉시 저장) · 시민/여행객 · 위치 · 예약 목록 -->
+<section class="scr scr-paper" id="scrMe" aria-labelledby="meQ">
+  <div class="card-k"><svg class="ic c-ic" aria-hidden="true"><use href="#i-user"></use></svg><div id="meQ">내 정보</div></div>
+  <div class="me-rows">
+    <button class="me-item" id="meWho" type="button"><svg class="ic ic-l" id="meWhoIcon" aria-hidden="true"><use href="#i-luggage"></use></svg><span id="meWhoName">여행객</span><svg class="ic ic-s me-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+    <button class="me-item" id="meLoc" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span id="meLocName">광주</span><svg class="ic ic-s me-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+    <button class="me-item" id="meBook" type="button" hidden><svg class="ic ic-l" aria-hidden="true"><use href="#i-calendar-check"></use></svg><span id="meBookName">예약</span><svg class="ic ic-s me-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+    <button class="me-item" id="meOwner" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-store"></use></svg><span>지역 사장<small>가게 정보 올리기</small></span><svg class="ic ic-s me-go" aria-hidden="true"><use href="#i-external-link"></use></svg></button>
+  </div>
+  <div class="pf-groups" id="mePrefs"></div>
+  <!-- 개발자 모드(#meDev) — '내 정보' 제목 또는 아래 내비 '내 정보'를 5번 누르면 열린다(itda.dev).
+       온보딩은 한 번만 뜨는 합의라, 다시 보려면 저장 데이터를 지우고 앱을 껐다 켜야 한다. -->
+  <div class="me-dev" id="meDev" hidden>
+    <div class="card-k"><svg class="ic c-ic" aria-hidden="true"><use href="#i-list-checks"></use></svg><div>개발자 모드</div></div>
+    <div class="me-rows">
+      <button class="me-item" id="devPos" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span><b id="devPosLabel">내 위치를 여기로 고정</b><small id="devPosSub"></small></span></button>
+      <!-- ① 진행 상태 수동 이동 — 위치를 고정하면 GPS 거리 판정이 얼지 않게, 고정 위치를 일정 칸으로 옮긴다 -->
+      <button class="me-item" id="devStep" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-flag"></use></svg><span><b id="devStepLabel">다음 칸에 도착한 걸로</b><small id="devStepSub"></small></span></button>
+      <button class="me-item" id="devStepReset" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-undo-2"></use></svg><span><b>진행 처음으로</b><small>다녀온 표시를 지우고 출발 자리로 돌아가요</small></span></button>
+      <!-- ② 시각 고정 — ?now=의 앱 안 버전(APK는 URL을 못 바꾼다) -->
+      <div class="me-item"><svg class="ic ic-l" aria-hidden="true"><use href="#i-clock"></use></svg><span><b id="devNowLabel">시각 고정: 안 함</b><small>일정 기준 시각·시간 휠·열차 목록·하늘 배경이 이 시각을 따라요</small><span class="dev-chips" id="devNowChips"><button class="dev-chip" type="button" data-now="-60">−1시간</button><button class="dev-chip" type="button" data-now="-30">−30분</button><button class="dev-chip" type="button" data-now="30">+30분</button><button class="dev-chip" type="button" data-now="60">+1시간</button><button class="dev-chip" type="button" data-now="off">끄기</button></span></span></div>
+      <!-- ⑧ 서버 주소 — ?server=의 앱 안 버전. 상수라 바꾸면 앱을 다시 시작한다 -->
+      <div class="me-item"><svg class="ic ic-l" aria-hidden="true"><use href="#i-external-link"></use></svg><span><b id="devSrvLabel">서버: 노트북</b><small id="devSrvSub"></small><span class="dev-chips" id="devSrvChips"><button class="dev-chip" type="button" data-srv="local">노트북</button><button class="dev-chip" type="button" data-srv="render">배포</button><button class="dev-chip" type="button" data-srv="ping">연결 확인</button></span></span></div>
+      <button class="me-item" id="devCache" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-undo-2"></use></svg><span>캐시 초기화<small id="devCacheSub">받아 둔 장소·경로·날씨를 지우고 다시 받아요</small></span></button>
+      <button class="me-item" id="devReset" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-triangle-alert"></use></svg><span>저장 사용자 데이터 리셋<small>취향·시민여행객·일정을 지워요. 앱을 껐다 켜면 온보딩부터.</small></span></button>
+      <button class="me-item" id="devRestart" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-house"></use></svg><span>지금 앱 다시 시작</span></button>
+      <button class="me-item" id="devOff" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-x"></use></svg><span>개발자 모드 끄기</span></button>
     </div>
-  </aside>
+    <div class="dev-info" id="devInfo"></div>
+  </div>
+</section>
 
-  <nav class="tabbar" aria-label="주요 메뉴">
-    <button class="on" data-tab="home" aria-current="page"><svg><use href="#i-home"/></svg>홈</button>
-    <button data-tab="maybe"><svg><use href="#i-shop"/></svg>들러볼 곳</button>
-    <button class="big" data-tab="plan" aria-label="일정 만들기">
-      <span class="orb"><svg><use href="#i-route"/></svg></span>일정</button>
-    <button data-tab="fest"><svg><use href="#i-cal"/></svg>행사</button>
-    <button data-tab="my"><svg><use href="#i-user"/></svg>마이</button>
-  </nav>
+<!-- 2. 몇 시 차: 알람식 시간 휠 -->
+<section class="scr scr-sky" id="scrAskTime">
+  <div class="step dots" role="img" aria-label="진행 표시"></div>
+  <div class="q"><svg class="ic ic-l q-ic" aria-hidden="true"><use href="#i-clock"></use></svg>몇 시 차로<br>가세요?</div>
+  <div class="wheels" aria-label="시간 선택">
+    <div class="wcol"><button class="wbtn" data-wheel="wheelH" data-d="-1" aria-label="한 시간 앞"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"></use></svg></button><div class="wheel" id="wheelH"></div><button class="wbtn" data-wheel="wheelH" data-d="1" aria-label="한 시간 뒤"><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button></div>
+    <div class="wheel-unit">시</div>
+    <div class="wheel-sep">:</div>
+    <div class="wcol"><button class="wbtn" data-wheel="wheelM" data-d="-1" aria-label="일 분 앞"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"></use></svg></button><div class="wheel" id="wheelM"></div><button class="wbtn" data-wheel="wheelM" data-d="1" aria-label="일 분 뒤"><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button></div>
+    <div class="wheel-unit">분</div>
+  </div>
+  <div class="w-hint" id="timeHint"></div>
+  <div class="grow"></div>
+  <button class="next" id="btnTimeNext"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg>다음</button>
+  <button class="lnk-c" id="btnNoTime" hidden>건너뛰기</button>
+  <div class="links">
+    <button class="lnk lnk-voice"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg>말로 하기</button>
+    <button class="lnk sub" data-back><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"></use></svg><span>이전</span></button>
+  </div>
+</section>
+
+<!-- 2-1. 돌아갈 차편 고르기 (v3: 서버 /trains 목록 — H2가 #trainList를 .train-row로 채움) -->
+<section class="scr scr-sky" id="scrTrainPick" aria-labelledby="tpQ">
+  <div class="step dots" role="img" aria-label="진행 표시"></div>
+  <div class="q" id="tpQ"><svg class="ic ic-l q-ic" aria-hidden="true"><use href="#i-clock"></use></svg>몇 시 차로<br>돌아가세요?</div>
+  <div class="cats tp-tabs" id="tpTabs" role="tablist" aria-label="출발 장소">
+    <button class="cat on" type="button" role="tab" aria-selected="true" data-from="songjeong"><svg class="ic ic-s" aria-hidden="true"><use href="#i-train-front"></use></svg>광주송정</button><button class="cat" type="button" role="tab" aria-selected="false" data-from="terminal"><svg class="ic ic-s" aria-hidden="true"><use href="#i-bus-front"></use></svg>유스퀘어</button>
+  </div>
+  <div class="badges tp-note" id="trainNote" role="status" aria-live="polite"></div>
+  <div class="train-list" id="trainList" aria-label="출발 시각 목록"></div>
+  <button class="lnk-c" id="btnTrainManual" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-pencil"></use></svg>직접 입력</button>
+  <div class="grow"></div>
+  <div class="links">
+    <button class="lnk lnk-voice"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg>말로 하기</button>
+    <button class="lnk sub" data-back><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"></use></svg><span>이전</span></button>
+  </div>
+</section>
+
+<!-- 3. 교통편 -->
+<section class="scr scr-sky" id="scrAskDest">
+  <div class="step dots" role="img" aria-label="진행 표시"></div>
+  <div class="q">어디서<br>타세요?</div>
+  <div class="choices" id="destChoices">
+    <button class="choice" data-v="songjeong"><svg class="ic ic-l" aria-hidden="true"><use href="#i-train-front"></use></svg><span>광주송정역</span></button>
+    <button class="choice" data-v="terminal"><svg class="ic ic-l" aria-hidden="true"><use href="#i-bus-front"></use></svg><span>유스퀘어</span></button>
+    <button class="choice" data-v="none"><svg class="ic ic-l" aria-hidden="true"><use href="#i-circle-minus"></use></svg><span>정한 곳 없음</span></button>
+  </div>
+  <div class="grow"></div>
+  <div class="links">
+    <button class="lnk lnk-voice"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg>말로 하기</button>
+    <button class="lnk sub" data-back><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"></use></svg><span>이전</span></button>
+  </div>
+</section>
+
+<!-- 4. 뭐 하고 싶으세요 -->
+<section class="scr scr-sky" id="scrAskDo">
+  <div class="step dots" role="img" aria-label="진행 표시"></div>
+  <div class="q">가기 전에<br>뭐 하실래요?</div>
+  <div class="w-hint do-hint">여러 개 골라도 돼요</div>
+  <div class="choices do-grid" id="doChoices">
+    <button class="choice dim multi" data-v="eat" aria-pressed="false"><svg class="ic ic-l" aria-hidden="true"><use href="#i-utensils"></use></svg><span>식사</span></button>
+    <button class="choice dim multi" data-v="cafe" aria-pressed="false"><svg class="ic ic-l" aria-hidden="true"><use href="#i-coffee"></use></svg><span>카페</span></button>
+    <button class="choice dim multi" data-v="play" aria-pressed="false"><svg class="ic ic-l" aria-hidden="true"><use href="#i-sparkles"></use></svg><span>놀기</span></button>
+    <button class="choice dim multi" data-v="sight" aria-pressed="false"><svg class="ic ic-l" aria-hidden="true"><use href="#i-landmark"></use></svg><span>구경</span></button>
+  </div>
+  <button class="next" id="btnDoNext" type="button" data-label="완료" disabled><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg>완료</button>
+  <div class="grow"></div>
+  <div class="links">
+    <button class="lnk lnk-voice"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg>말로 하기</button>
+    <button class="lnk sub" data-back><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"></use></svg><span>이전</span></button>
+  </div>
+</section>
+
+<!-- 5. 이렇게 이해했어요 — 요약 행 4개(시각·차편·출발·할 일). 행 자체가 '바꾸기' 버튼이고 우측 chevron이 그 표시. -->
+<section class="scr scr-sky" id="scrConfirm">
+  <div class="c-head">이렇게 이해했어요</div>
+  <div class="c-card">
+    <button type="button" class="c-row" id="cfRowTime" data-edit="time" aria-label="시각 바꾸기"><svg class="ic c-ic" aria-hidden="true"><use href="#i-clock"></use></svg><div id="cfTime"></div><svg class="ic ic-s c-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+    <button type="button" class="c-row" id="cfRowDest" data-edit="dest" aria-label="타는 곳 바꾸기"><svg class="ic c-ic" aria-hidden="true"><use href="#i-train-front"></use></svg><div id="cfDest"></div><svg class="ic ic-s c-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+    <button type="button" class="c-row" id="cfRowFrom" data-edit="from" aria-label="출발 위치 바꾸기"><svg class="ic c-ic" aria-hidden="true"><use href="#i-map-pin"></use></svg><div id="cfFrom"></div><svg class="ic ic-s c-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+    <button type="button" class="c-row" id="cfRowDo" data-edit="intent" aria-label="할 일 바꾸기"><span class="c-doic" id="cfDoIc" aria-hidden="true"></span><div id="cfDo"></div><svg class="ic ic-s c-go" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+  </div>
+  <div class="c-note">
+    <div class="badges" id="cfNote"></div>
+    <div class="s" id="cfBuf"></div>
+    <div class="pills"><button class="pill num" id="buf30">30분</button><button class="pill num" id="buf45">45분</button></div>
+  </div>
+  <div class="grow"></div>
+  <button class="next" id="btnGo"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg>이대로 짜기</button>
+  <button class="lnk-c" id="btnRestart"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo-2"></use></svg>처음부터</button>
+</section>
+
+<!-- 6. 짜는 중 (#scrBuilding) — 확인 CTA와 일정 사이. AI 호출(최대 4초) 동안만, 최소 600ms 보인다.
+     결과 화면(#scrResult)은 폐기(AI일정_취향_설계 §1) — 나가기 카드·듣기·지도는 일정 화면으로 옮겼다. -->
+<section class="scr scr-sky" id="scrBuilding" aria-busy="true">
+  <div class="grow"></div>
+  <div class="bd-wrap">
+    <div class="bd-orb" aria-hidden="true"><span class="bd-ring"></span><svg class="ic ic-l bd-mid"><use href="#i-sparkles"></use></svg></div>
+    <div class="bd-t" role="status">일정을 짜는 중</div>
+  </div>
+  <div class="grow"></div>
+</section>
+
+<!-- 7. 지금 가는 길 -->
+<section class="scr scr-paper" id="scrDepart">
+  <div class="d-top"><svg class="ic c-ic" aria-hidden="true"><use href="#i-arrow-right-from-line"></use></svg><div class="num" id="dTop"></div></div>
+  <div class="step num" id="dStep"></div>
+  <div class="d-card">
+    <div class="d-t" id="dT"></div>
+    <div class="d-s" id="dS"></div>
+    <div class="d-p" id="dP"></div>
+    <div class="d-q" id="dQ"></div>
+  </div>
+  <div class="show"><div class="k">보여주는 문장</div><div class="t" id="dShow"></div></div>
+  <div class="grow"></div>
+  <button class="next" id="btnArrive"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg>도착했어요</button>
+  <div class="btn-row">
+    <button class="btn-sec" id="btnReread"><svg class="ic" aria-hidden="true"><use href="#i-volume-2"></use></svg>다시 듣기</button>
+    <button class="btn-sec" id="btnNaver"><svg class="ic" aria-hidden="true"><use href="#i-external-link"></use></svg>네이버지도</button>
+  </div>
+  <button class="lnk-c" data-back><svg class="ic ic-s" aria-hidden="true"><use href="#i-chevron-left"></use></svg>카드로 돌아가기</button>
+</section>
+
+<!-- 8. 전체화면 지도 (카카오맵 SDK 연동은 map.js) -->
+<section class="scr" id="scrMapFull">
+  <div id="mapFullCanvas" class="mapcanvas full"></div>
+  <div class="mf-top">
+    <div class="mf-row">
+      <button class="sq" data-back aria-label="돌아가기"><svg class="ic ic-l" aria-hidden="true"><use href="#i-chevron-left"></use></svg></button>
+      <div class="mf-card"><svg class="ic ic-s c-ic" aria-hidden="true"><use href="#i-clock"></use></svg><div class="num" id="mfCard"></div></div>
+    </div>
+    <div class="cats" id="cats">
+      <button class="cat on" data-cat="all">전부</button><button class="cat" data-cat="eat"><svg class="ic ic-s" aria-hidden="true"><use href="#i-utensils"></use></svg>식당</button><button class="cat" data-cat="cafe"><svg class="ic ic-s" aria-hidden="true"><use href="#i-coffee"></use></svg>카페</button><button class="cat" data-cat="play"><svg class="ic ic-s" aria-hidden="true"><use href="#i-sparkles"></use></svg>놀기</button><button class="cat" data-cat="sight"><svg class="ic ic-s" aria-hidden="true"><use href="#i-landmark"></use></svg>구경</button><button class="cat" data-cat="stay"><svg class="ic ic-s" aria-hidden="true"><use href="#i-bed"></use></svg>숙박</button>
+    </div>
+    <div class="mf-count badges" id="mfCount"></div>
+  </div>
+  <!-- 지도 조작 버튼(오른쪽 아래): 확대·축소·내 위치. 시트가 열리면 .up으로 시트 위까지 올라간다 -->
+  <div class="mf-ctl" id="mfCtl">
+    <button class="mfc mfc-n" id="mfNorth" type="button" aria-label="북쪽으로 되돌리기" hidden><svg class="ic ic-l" aria-hidden="true"><use href="#i-compass"></use></svg></button>
+    <button class="mfc" id="mfZoomIn" type="button" aria-label="지도 확대"><span class="mfc-t" aria-hidden="true">+</span></button>
+    <button class="mfc" id="mfZoomOut" type="button" aria-label="지도 축소"><span class="mfc-t" aria-hidden="true">−</span></button>
+    <button class="mfc mfc-me" id="mfLocate" type="button" aria-label="내 위치로"><svg class="ic ic-l" aria-hidden="true"><use href="#i-locate-fixed"></use></svg></button>
+  </div>
+  <!-- 묶음 점을 누르면 나오는 목록(에어비앤비식). 가게 하나를 고르면 기존 가게 시트로 넘어간다 -->
+  <div class="mf-sheet mf-list" id="mfList" hidden>
+    <div class="n"><span id="mfListN"></span></div>
+    <div class="mfl-rows" id="mfListRows"></div>
+    <button class="lnk-c" id="mfListClose"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>닫기</button>
+  </div>
+  <div class="mf-sheet" id="mfSheet" hidden>
+    <div class="n"><span id="mfName"></span> <small id="mfSub"></small></div>
+    <div class="p badges" id="mfOpen"></div>
+    <div class="q" id="mfWalk"></div>
+    <div class="q" id="mfLeave"></div>
+    <div class="mf-acts"><button class="a" id="mfCall" hidden>전화</button><button class="a" id="mfNaver"><svg class="ic ic-s" aria-hidden="true"><use href="#i-external-link"></use></svg>네이버지도</button><button class="a" id="mfGo"><svg class="ic ic-s" aria-hidden="true"><use href="#i-footprints"></use></svg>경로안내</button></div>
+    <button class="lnk-c" id="mfSheetClose"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>닫기</button>
+  </div>
+</section>
+
+<!-- 9. 오늘 일정 (일정 하나 · 칸 단위 '여긴 말고' · 고정 · 되돌리기) — 재설계 2026-09-03: 요약 문장(sticky) → 지도 썸네일(번호 = 칸 번호) → 출발·이동 줄·칸 → 남는 시간 → 돌아가는 칸(항상 고정). 렌더는 plan-ui.js -->
+<section class="scr scr-paper" id="scrPlan">
+  <div class="card-k"><svg class="ic c-ic" aria-hidden="true"><use href="#i-calendar-days"></use></svg><div>오늘 일정</div></div>
+  <div class="p-sum" id="planHead">
+    <div class="p-sum-top">
+      <div class="p-sum-main" id="planSumMain"></div>
+      <div class="p-sum-acts">
+        <button class="p-sumb" id="btnPlanSpeak" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-volume-2"></use></svg>듣기</button>
+        <button class="p-sumb" id="btnPlanMapFull" type="button"><svg class="ic ic-s" aria-hidden="true"><use href="#i-map"></use></svg>지도</button>
+      </div>
+    </div>
+    <div class="p-sum-sub num" id="planSumSub"></div>
+  </div>
+  <button class="mapprev p-map" id="planMap" aria-label="지도 크게 보기">
+    <div id="planMapCanvas" class="mapcanvas"></div>
+    <span class="p-maptap"><svg class="ic ic-s" aria-hidden="true"><use href="#i-map"></use></svg>지도</span>
+  </button>
+  <div class="p-list" id="planList"></div>
+  <button class="btn-sec p-add" id="btnPlanAdd" hidden>한 곳 더</button>
+  <div class="fine p-note" id="planNote"></div>
+  <!-- 아래 두 버튼의 문구는 plan-ui.js(2b)가 textContent로 덮어쓴다 — 아이콘은 2b가 붙인다 -->
+  <button class="btn-sec p-redo" id="btnPlanRedo">다시 짜기</button>
+  <button class="btn-big p-go" id="btnPlanGo">이 일정으로</button>
+</section>
+
+<!-- 하단 내비게이션: 홈 · 지도 · 일정 · 내 정보 (묻는 화면·확인 화면·짜는 중에서는 숨김) -->
+<nav class="nav" id="nav" hidden>
+  <button class="nav-b" data-nav="scrHome"><svg class="ic ic-l" aria-hidden="true"><use href="#i-house"></use></svg><span>홈</span></button>
+  <button class="nav-b" data-nav="scrMapFull"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map"></use></svg><span>지도</span></button>
+  <button class="nav-b" data-nav="scrPlan"><svg class="ic ic-l" aria-hidden="true"><use href="#i-calendar-days"></use></svg><span>일정</span></button>
+  <button class="nav-b" data-nav="scrMe"><svg class="ic ic-l" aria-hidden="true"><use href="#i-user"></use></svg><span>내 정보</span></button>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<!-- 글로 쓰기 시트: 음성과 같은 경로(applyHeard)로 확인 화면까지 -->
+<div class="sheet" id="textSheet">
+  <div class="sheet-in">
+    <div class="q sheet-q"><svg class="ic ic-l q-ic" aria-hidden="true"><use href="#i-send"></use></svg>내용을 입력해 주세요</div>
+    <textarea id="textIn" class="textin" rows="3" maxlength="200" lang="ko" enterkeyhint="send" placeholder="예: 저녁 7시 반 기차인데 밥 먹고 싶어요" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="텍스트 입력"></textarea>
+    <div class="badges sheet-hint" id="textHint"></div>
+    <button class="next" id="btnTextSend" style="margin-top:0;">보내기</button>
+    <div class="links"><button class="lnk sub" id="btnTextPick"><svg class="ic" aria-hidden="true"><use href="#i-list-checks"></use></svg><span>직접 고르기</span></button><button class="lnk sub" id="btnTextClose"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg><span>닫기</span></button></div>
+  </div>
 </div>
-
-<script src="data.js"></script>
-<script src="engine.js"></script>
-<script src="app.js"></script>
+<!-- 위치 직접 고르기 (GPS 실패·오판 시) -->
+<div class="sheet" id="locPick">
+  <div class="sheet-in">
+    <div class="q sheet-q"><svg class="ic ic-l q-ic" aria-hidden="true"><use href="#i-map-pin"></use></svg>지금 어디 계세요?</div>
+    <div class="choices loc-dongs" id="locPickDongs" aria-label="가까운 동네"></div>
+    <div class="choices">
+      <button class="choice" data-v="champions"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span>챔피언스필드</span></button>
+      <button class="choice" data-v="chungjang"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span>충장로</span></button>
+      <button class="choice" data-v="acc"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span>문화전당</span></button>
+      <button class="choice" data-v="dongmyeong"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span>동명동</span></button>
+      <button class="choice" data-v="yangnim"><svg class="ic ic-l" aria-hidden="true"><use href="#i-map-pin"></use></svg><span>양림동</span></button>
+      <button class="choice" data-v="other"><svg class="ic ic-l" aria-hidden="true"><use href="#i-circle-help"></use></svg><span>다른 곳</span></button>
+      <button class="choice loc-gps" id="btnLocGps" type="button"><svg class="ic ic-l" aria-hidden="true"><use href="#i-locate-fixed"></use></svg><span>GPS 다시</span></button>
+    </div>
+    <button class="lnk-c" id="locPickClose"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>닫기</button>
+  </div>
+</div>
+<!-- 일정 화면 부속(plan-ui.js): 되돌리기 스낵바(자동 소멸 없음) · 한 곳 더 넣기 · 고정 풀기 확인(앱의 유일한 확인창) · 이 가게 자세히 -->
+<div class="p-snack" id="planSnack" role="status" aria-live="polite" hidden><span id="planSnackText"></span><button type="button" id="planSnackUndo"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo-2"></use></svg>되돌리기</button></div>
+<div class="sheet p-sheet" id="planSheet" role="dialog" aria-modal="true" aria-labelledby="planSheetQ">
+  <div class="sheet-in">
+    <div class="q sheet-q" id="planSheetQ">뭘 더 넣을까요?</div>
+    <div class="choices" id="planSheetCats">
+      <button type="button" class="choice" data-cat="eat"><svg class="ic ic-l" aria-hidden="true"><use href="#i-utensils"></use></svg><span>식사</span><small class="num">45분</small></button>
+      <button type="button" class="choice" data-cat="cafe"><svg class="ic ic-l" aria-hidden="true"><use href="#i-coffee"></use></svg><span>카페</span><small class="num">30분</small></button>
+      <button type="button" class="choice" data-cat="play"><svg class="ic ic-l" aria-hidden="true"><use href="#i-sparkles"></use></svg><span>놀기</span><small class="num">30분</small></button>
+      <button type="button" class="choice" data-cat="sight"><svg class="ic ic-l" aria-hidden="true"><use href="#i-landmark"></use></svg><span>구경</span><small class="num">20분</small></button>
+    </div>
+    <div class="choices" id="planSheetCands" hidden></div>
+    <div class="links"><button type="button" class="lnk sub" id="planSheetBack" hidden><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"></use></svg><span>종류 다시</span></button><button type="button" class="lnk sub" id="planSheetClose"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg><span>닫기</span></button></div>
+  </div>
+</div>
+<div class="sheet p-sheet" id="planConfirm" role="dialog" aria-modal="true" aria-labelledby="planConfirmText">
+  <div class="sheet-in">
+    <div class="q num" id="planConfirmText" style="font-size:26px; margin:0 0 8px;"></div>
+    <p class="p-sheet-p" id="planConfirmSub"></p>
+    <div class="p-row2"><button type="button" class="p-keep" id="btnPlanKeep">그대로 둘게요</button><button type="button" class="p-go2" id="btnPlanUnfix"><svg class="ic ic-s" aria-hidden="true"><use href="#i-pin-off"></use></svg>고정 풀기</button></div>
+  </div>
+</div>
+<div class="sheet p-sheet" id="planDetail" role="dialog" aria-modal="true" aria-labelledby="planDetailName">
+  <div class="sheet-in">
+    <div class="q" style="font-size:26px; margin:0 0 6px;"><span id="planDetailName"></span> <small class="p-detail-sub" id="planDetailSub"></small></div>
+    <p class="p-sheet-p"><svg class="ic ic-s" aria-hidden="true"><use href="#i-circle-help"></use></svg>영업 미확인 · 닫혀 있으면 ‘여긴 말고’</p>
+    <div class="p-kv num"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg><span>도착~떠남</span><b id="planDetailTime"></b></div>
+    <div class="p-kv num"><svg class="ic ic-s" aria-hidden="true"><use href="#i-footprints"></use></svg><span>걸어서</span><b id="planDetailWalk"></b></div>
+    <div class="p-kv num"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg><span>머무는 시간</span><b id="planDetailStay"></b></div>
+    <button type="button" class="btn-sec p-sheet-btn" id="planDetailNaver"><svg class="ic" aria-hidden="true"><use href="#i-external-link"></use></svg>네이버지도</button>
+    <button type="button" class="btn-sec p-sheet-btn quiet" id="planDetailRemove"><svg class="ic" aria-hidden="true"><use href="#i-circle-minus"></use></svg>빼기</button>
+    <button type="button" class="btn-big p-sheet-btn" id="planDetailClose">닫기</button>
+  </div>
+</div>
+<!-- 칸 장소 바꾸기 시트(plan-ui.js: swap) — 그 칸 장소 기준 600m 안 후보를 .choice로 채움 -->
+<div class="sheet p-sheet" id="swapSheet" role="dialog" aria-modal="true" aria-labelledby="swapSheetTitle">
+  <div class="sheet-in">
+    <div class="q sheet-q" id="swapSheetTitle"></div>
+    <div class="badges swap-sub" id="swapSheetSub"></div>
+    <div class="choices swap-cands" id="swapCands"></div>
+    <button type="button" class="lnk-c" id="swapSheetClose"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>닫기</button>
+  </div>
+</div>
+<!-- 칸 사이 이동수단 시트(plan-ui.js: mode) — 도보·택시·대중교통 중 하나를 고르면 그 시간으로 일정을 다시 잰다.
+     값은 서버 GET /move(TMAP 보행자·카카오모빌리티·ODsay). 못 구한 수단은 '미확인'으로만 보여 주고 고를 수 없다. -->
+<div class="sheet p-sheet" id="moveSheet" role="dialog" aria-modal="true" aria-labelledby="moveSheetTitle">
+  <div class="sheet-in">
+    <div class="q sheet-q" id="moveSheetTitle">어떻게 갈까요?</div>
+    <div class="badges swap-sub" id="moveSheetSub"></div>
+    <div class="choices swap-cands" id="moveOpts"></div>
+    <button type="button" class="lnk-c" id="moveSheetClose"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>닫기</button>
+  </div>
+</div>
+<!-- 예약·결제 시트(plan-ui.js) — docs/예약결제_구현설계_2026-09-04 §1·§4. 행은 JS가 채운다(칸용 3행 / 나가기 칸용 2행+복사문) -->
+<div class="sheet p-sheet" id="bookSheet" role="dialog" aria-modal="true" aria-labelledby="bookSheetTitle">
+  <div class="sheet-in">
+    <div class="q sheet-q" id="bookSheetTitle"></div>
+    <div class="badges" id="bookSheetBadges"></div>
+    <div class="bk-copy" id="bookCopy" hidden>
+      <b class="num" id="bookCopyText"></b>
+      <button type="button" class="bk-copy-btn" id="btnBookCopy"><svg class="ic ic-s" aria-hidden="true"><use href="#i-copy"></use></svg>복사</button>
+    </div>
+    <div class="choices bk-rows" id="bookRows"></div>
+    <!-- 결제위젯용 키(test_gck_…)일 때만 보인다 — 결제창용 키(test_ck_…)는 바로 창이 뜼다 -->
+    <div class="bk-pay" id="bookPay" hidden>
+      <div id="payMethods"></div>
+      <div id="payAgree"></div>
+      <button type="button" class="next" id="btnPayGo">결제하기</button>
+    </div>
+    <button type="button" class="lnk-c" id="bookSheetClose"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>닫기</button>
+  </div>
+</div>
+<!-- 창구에서 돌아왔을 때(10분 안) 한 번 묻는다 — 예/아니오 둘뿐 -->
+<div class="sheet p-sheet" id="bookAsk" role="dialog" aria-modal="true" aria-labelledby="bookAskText">
+  <div class="sheet-in">
+    <div class="q" id="bookAskText" style="font-size:28px; margin:0 0 16px;">예약하셨어요?</div>
+    <div class="p-row2"><button type="button" class="p-keep" id="btnBookNo">아니요</button><button type="button" class="p-go2" id="btnBookYes"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>예</button></div>
+  </div>
+</div>
+<script src="places-data.js"></script>
+<script src="map.js?v=1788496097"></script>
+<script src="plan.js?v=1788496097"></script>
+<script src="plan-ui.js?v=1788496097"></script>
+<script src="speech.js?v=1788496097"></script>
+<script src="flow.js?v=1788496097"></script>
 </body>
 </html>
